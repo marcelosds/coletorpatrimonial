@@ -815,8 +815,10 @@ export const excluirUsuarioPorEmail = async (email) => {
         const userId = await getUserIdByEmail(email); // Função que obtém o ID do usuário pelo e-mail
 
         if (userId) {
-            //console.log(`Usuário encontrado com ID: ${userId}`);
+            console.log(`Usuário encontrado com ID: ${userId}`);
 
+            // Aqui você pode ter a lógica para excluir a conta
+            // Por exemplo:
             await deleteUserById(userId); // Implemente essa função para a exclusão
             
         } 
