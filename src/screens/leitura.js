@@ -1,26 +1,237 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, Button, Alert, ScrollView } from 'react-native';
 import axios from 'axios';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+import { CameraView, Camera } from "expo-camera";
 import RNPickerSelect from 'react-native-picker-select';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { getLocais } from '../database/baseSqlite';
+import { getSituacao } from '../database/baseSqlite';
+import { getEstados } from '../database/baseSqlite';
+import { getItemsFromSQLite } from '../database/baseSqlite';
+import { atualizarInventario } from '../database/baseSqlite';
+import { getLocalizaSQLite } from '../database/baseSqlite';
+import { getSituacaoInven } from '../database/baseSqlite';
+
 
 const Leitura = () => {
+  const [texto, setTexto] = useState("Aguardando leitura..."); // Estado para armazenar o texto
+  const [corTexto, setCorTexto] = useState("#008000"); // Estado para armazenar a cor do texto
+  const [bensData, setBensData] = useState([]); // Armazena os dados dos bens
+  const [isBtnLimparDisabled, setBtnLimparDisabled] = useState(false); // Estado para controlar se o botão está desativado
+  const [isBtnGravarDisabled, setBtnGravarDisabled] = useState(true); // Estado para controlar se o botão está desativado
+  const [isEditable, setIsEditable] = useState(true); // Estado que controla se o TextInput é editável
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [localizacoes, setLocalizacoes] = useState([]);
   const [situacoes, setSituacoes] = useState([]);
-    const [fields, setFields] = useState({
+  const [estados, setEstados] = useState([]);
+  const [stInventario, setStInventario] = useState(null); // Adicionado para armazenar stInventario
+  const [selectedLocalizacao, setSelectedLocalizacao] = useState(null); // Armazena o ID da localização
+  const [selectedEstado, setSelectedEstado] = useState(null); // Armazena o ID da localização
+  const [selectedSituacao, setSelectedSituacao] = useState(null); // Armazena o ID da localização
+  const [fields, setFields] = useState({
     placa: '',
+    codigo: '',
     descricao: '',
-    localizacao: '',
-    estado: '',
-    situacao: '',
+    status: '',
+    valor: '',
   });
+
+
+  // Limpa as combobox
+  const limparCampo = () => {
+    setSelectedLocalizacao(null); 
+    setSelectedEstado(null);
+    setSelectedSituacao(null);
+  };
+
+  // Deixa a edição do campo placa desabilitado após encontrar bem
+  const destivaEditable = () => {
+    setIsEditable(!isEditable); // Alterna a editabilidade
+  };
+
+  const ativaEditable = () => {
+    setIsEditable(true);
+  }
+
+  const handleLeituraRealizada = () => {
+    setTexto("Leitura realizada!"); // Atualiza o texto
+    setCorTexto("red"); // Define a cor do texto para vermelho
+  };
+
+  const handleAguardandoLeitura = () => {
+    setTexto("Aguardando leitura..."); // Reseta para o texto original
+    setCorTexto("green"); // Define a cor do texto para verde
+  };
+
+  const [codigoUnidadeGestora, setCodigoUnidadeGestora] = useState('');
+  const [apiLink, setApiLink] = useState('');
+  const [codigoInventario, setCodigoInventario] = useState('');
+
+  // Carrega os dados da configuração para o AsyncStorage
+  useFocusEffect(
+    React.useCallback(() => {
+    const loadData = async () => {
+      try {
+        const json = await AsyncStorage.getItem('inventario');
+        const inventario = JSON.parse(json);
+
+        if (inventario) {
+          setApiLink(inventario.apiLink);
+          setCodigoInventario(inventario.codigoInventario.toString());
+          setCodigoUnidadeGestora(inventario.codigoUnidadeGestora.toString());
+
+          // Lógica para exibir o texto adequado com base no código da unidade gestora
+          const unidadeGestora = inventario.codigoUnidadeGestora.toString() === '1'
+          ? 'Câmara Municipal'
+          : inventario.codigoUnidadeGestora.toString() === '0'
+          ? 'Prefeitura Municipal'
+          : 'Demais Unidades'; // Para outros casos
+
+          Alert.alert(
+            'Informações do Inventário',
+            `Inventário: ${inventario.codigoInventario.toString()}
+Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestora}`
+          );
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Localizações e Situações não foram carregadas!');
+      }
+    };
+
+    loadData(); // Chama a função para carregar os dados
+    }, [])); // Executa uma vez na montagem do componente
+
+  // Carrega as localizações da base de dados informada nas configurações    
+  useEffect(() => {
+    const carregaLocais = async ( ) => {
+    try {
+          const json = await AsyncStorage.getItem('inventario');
+          const inventario = JSON.parse(json);
+
+         // Verifica se está habilitado para carregar da API ou do SQLite
+         if (inventario.isEnabled) {
+
+          // Carrega os bens da tabela INVENTARIOITEM do SQLite
+          const locais = await getLocais(); // função para obter itens do SQLite
+
+          // Supondo que a resposta é um array de objetos com `label` e `value`
+          const locaisFormatados = locais.map(item => ({
+            label: item.dsLocalizacao,
+            value: item.cdLocalReduzido,
+        }));
+          
+          setLocalizacoes(locaisFormatados);
+          
+          } else if (apiLink && codigoUnidadeGestora) {
+       
+          const response = await axios.get(`${apiLink}/locais/${codigoUnidadeGestora}`);
+          // Supondo que a resposta é um array de objetos com `label` e `value`
+          const formattedData = response.data.map((item) => ({
+            label: item.dsLocalizacao, // ajuste conforme o formato do seu objeto
+            value: item.cdLocalReduzido,
+          }));
+          setLocalizacoes(formattedData);
+        }
+  
+
+    } catch (error) {
+      //console.error("Erro na requisição da API:", error);
+      //Alert.alert('Erro', 'Erro de comunicação com a API, serviço pode estar inativo!')
+    }
+  };
+    carregaLocais();
+  }, [apiLink, codigoUnidadeGestora]);
+
+  // Carrega as situações da base de dados informada nas configurações 
+  useEffect(() => {
+    const carregaSituacao = async ( ) => {
+    try {
+
+      const json = await AsyncStorage.getItem('inventario');
+      const inventario = JSON.parse(json);
+
+      // Verifica se está habilitado para carregar da API ou do SQLite
+      if (inventario.isEnabled) {
+
+        // Carrega os bens da tabela INVENTARIOITEM do SQLite
+        const situacao = await getSituacao(); // função para obter itens do SQLite
+
+        // Supondo que a resposta é um array de objetos com `label` e `value`
+        const situacaoFormatadas = situacao.map(item => ({
+          label: item.dsSituacao,
+          value: item.cdSituacaoReduzido,
+      }));
+        
+        setSituacoes(situacaoFormatadas);
+        
+        } else if (apiLink) {
+
+      const response = await axios.get(`${apiLink}/situacao`);
+      // Supondo que a resposta é um array de objetos com `label` e `value`
+      const formattedData = response.data.map((item) => ({
+        label: item.dsSituacao, // ajuste conforme o formato do seu objeto
+        value: item.cdSituacaoReduzido,
+      }));
+      setSituacoes(formattedData);
+    }
+
+    } catch (error) {
+      //console.error("Erro na requisição da API:", error);
+    }
+
+    };
+    carregaSituacao();
+  }, [apiLink]);
+
+
+  // Carrega as estados de conservação da base de dados informada nas configurações 
+  useEffect(() => {
+    const carregaEstados = async ( ) => {
+    try {
+
+      const json = await AsyncStorage.getItem('inventario');
+      const inventario = JSON.parse(json);
+
+      // Verifica se está habilitado para carregar da API ou do SQLite
+      if (inventario.isEnabled) {
+
+        // Carrega os bens da tabela INVENTARIOITEM do SQLite
+        const estados = await getEstados(); // função para obter itens do SQLite
+
+        // Supondo que a resposta é um array de objetos com `label` e `value`
+        const estadosFormatados = estados.map(item => ({
+          label: item.dsEstadoConser,
+          value: item.cdEstadoConser,
+      }));
+        
+        setEstados(estadosFormatados);
+        
+        } else if (apiLink) {
+
+      const response = await axios.get(`${apiLink}/estado`);
+      // Supondo que a resposta é um array de objetos com `label` e `value`
+      const formattedData = response.data.map((item) => ({
+        label: item.dsEstadoConser, // ajuste conforme o formato do seu objeto
+        value: item.cdEstadoConser,
+      }));
+      setEstados(formattedData);
+    }
+
+    } catch (error) {
+      //console.error("Erro na requisição da API:", error);
+    }
+
+    };
+    carregaEstados();
+  }, [apiLink]);
+
 
   useEffect(() => {
     (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
     })();
   }, []);
@@ -29,71 +240,112 @@ const Leitura = () => {
     setScanned(true);
     setLoading(true);
     fetchBemData(data.trim());
+    handleLeituraRealizada();
   };
 
   const fetchBemData = async (placa) => {
     try {
 
-      const invent = 1 // definir um local para escolher o inventário a ler
+      //const placaInput = fields.placa.trim() ? fields.placa.trim() : fields.codigo;
 
-      const response = await axios.get(`http://192.168.15.10:3000/api/bens/${placa}/${invent}`);
+      const json = await AsyncStorage.getItem('inventario');
+      const inventario = JSON.parse(json);
+
+       // Verifica se está habilitado para carregar da API ou do SQLite
+       if (inventario.isEnabled) {
+        // Carrega os bens da tabela INVENTARIOITEM do SQLite
+        const bem = await getLocalizaSQLite(placa); // função para obter itens do SQLite
+        setFields({
+          placa: bem.nrPlaca.trim() || '', // Guardar como string ou vazio
+          codigo: bem.cdItem.toString() || '',
+          descricao: bem.dsReduzida || '',
+          status: bem.StatusBem || '',
+          valor: bem.vlAtual || '',
+        });
+  
+        setSelectedEstado(bem.cdEstadoConserReal);
+        setSelectedLocalizacao(bem.cdLocalizacaoReal);
+        setSelectedSituacao(bem.cdSituacaoAtual);
+
+      } else if (apiLink && codigoInventario) {
+      
+      const response = await axios.get(`${apiLink}/bens/${placa}/${codigoInventario}`);
       const bem = response.data; // A resposta já vem em JSON, então direto 'data'.
       setFields({
         placa: bem.nrPlaca.trim() || '', // Guardar como string ou vazio
+        codigo: bem.cdItem.toString() || '',
         descricao: bem.dsReduzida || '',
-        localizacao: bem.dsLocalizacao || '',
-        estado: bem.dsEstadoConser || '',
-        situacao: bem.dsSituacao || '',
+        status: bem.StatusBem || '',
+        valor: bem.vlAtual || '',
       });
+
+      setSelectedEstado(bem.cdEstadoConserReal);
+      setSelectedLocalizacao(bem.cdLocalizacaoReal);
+      setSelectedSituacao(bem.cdSituacaoAtual);
+      
+    }
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível obter os dados do bem. Verifique se o código está correto e tente novamente.');
     } finally {
       setLoading(false);
+      setBtnGravarDisabled(false);
+      destivaEditable();
+    }
+    
+  };
+
+  // Função para capturar todos os bens
+  useEffect(() => {
+  const fetchBensData = async () => {
+    try {
+
+      const json = await AsyncStorage.getItem('inventario');
+      const inventario = JSON.parse(json);
+
+      // Verifica se está habilitado para carregar da API ou do SQLite
+      if (inventario.isEnabled) {
+        // Carrega os bens da tabela INVENTARIOITEM do SQLite
+        const bensFromSQLite = await getItemsFromSQLite(); // função para obter itens do SQLite
+        setBensData(bensFromSQLite);
+        
+      } else if (apiLink && codigoInventario) {
+
+      const response = await axios.get(`${apiLink}/bens/${codigoInventario}`);
+      setBensData(response.data); // Armazena os dados dos bens
+    }
+    } catch (error) {
+      //Alert.alert('Erro', 'Não foi possível obter os dados dos bens.');
+    }
+  };
+  fetchBensData();
+  }, [apiLink, codigoInventario]);
+
+
+  // Função para localizar a placa informada na caixa de texto
+  const handleLocalizar = () => {
+
+    const placaInput = fields.placa.trim(); // Captura o texto do TextInput e remove espaços em branco
+ 
+    // Verifica se a entrada está vazia
+    if (!placaInput) {
+      Alert.alert('Atenção', 'Por favor, insira uma Placa ou Código!'); // Alerta se o campo estiver vazio
+      return; // Sai da função
+    }
+
+    const bemEncontrado = bensData.find(bem => (bem.nrPlaca.trim() === placaInput || bem.cdItem.toString() === placaInput));
+
+    if (bemEncontrado) {
+      fetchBemData(bemEncontrado.cdItem || bemEncontrado.nrPlaca); // Chama a função com a placa do bem encontrado
+      handleLeituraRealizada();
+      setBtnLimparDisabled(true); // Desativa o botão após a ação
+      setBtnGravarDisabled(false); // Ativa o botão após a ação
+      destivaEditable();
+    } else {
+      Alert.alert('Atenção', 'Bem não localizado!'); // Alerta se não encontrar
     }
   };
 
-  useEffect(() => {
-    const fetchLocalizacoes = async () => {
-      try {
-
-        const ug = 1 // definir um local para escolher a UG a ler
-
-        const response = await axios.get(`http://192.168.15.10:3000/api/locais/${ug}`);
-        // Supondo que a resposta é um array de objetos com `label` e `value`
-        const formattedData = response.data.map((item) => ({
-          label: item.dsLocalizacao, // ajuste conforme o formato do seu objeto
-          value: item.dsLocalizacao,
-        }));
-        setLocalizacoes(formattedData);
-
-      } catch (error) {
-        console.error('Erro ao buscar localizações:', error);
-      }
-    };
-
-    fetchLocalizacoes();
-  }, []);
-
-  useEffect(() => {
-    const fetchSituacoes = async () => {
-      try {
-
-        const response = await axios.get(`http://192.168.15.10:3000/api/situacao`);
-        // Supondo que a resposta é um array de objetos com `label` e `value`
-        const formattedData = response.data.map((item) => ({
-          label: item.dsSituacao, // ajuste conforme o formato do seu objeto
-          value: item.dsSituacao,
-        }));
-        setSituacoes(formattedData);
-
-      } catch (error) {
-        console.error('Erro ao buscar situaçoes:', error);
-      }
-    };
-
-    fetchSituacoes();
-  }, []);
-
+  
   const handleInputChange = (field, value) => {
     setFields({
       ...fields,
@@ -101,20 +353,111 @@ const Leitura = () => {
     });
   };
 
-  const saveData = async (placa) => {
-    try {
-      await axios.put(`http://192.168.15.10:3000/api/bens/${placa}`, fields);
-      Alert.alert('Sucesso', 'Dados do bem salvos com sucesso.');
-      
-      // Limpar os campos após salvar
-      setFields({
-        placa: '',
-        descricao: '',
-        localizacao: '',
-        estado: '',
-        situacao: ''
-      });
+  // Função para buscar situação do inventário
+  useFocusEffect(
+    React.useCallback(() => {
+        const carrega = async () => {
+            try {
 
+              const json = await AsyncStorage.getItem('inventario');
+              const inventario = JSON.parse(json);
+
+              if (inventario.isEnabled) {
+                const situacaoInven = await getSituacaoInven(); // função para obter situação do inventário do SQLite
+                setStInventario(situacaoInven);
+
+              } else if (apiLink && codigoInventario) {
+
+                const InventarioResponse = await axios.get(`${apiLink}/inventario/${codigoInventario}`); // Endpoint da API
+
+            setStInventario(InventarioResponse.data.stInventario); // Armazena os dados no estado
+
+                }
+            } catch (error) {
+            
+            } finally {
+
+            }
+            
+        };
+    carrega(); // Chama a função para carregar os dados
+    }, [apiLink, codigoInventario])); // Executa uma vez na montagem do componente
+
+
+  const salvar = async () => {
+
+        // Verifica se stInventario é diferente de 1
+        if (stInventario !== 1) {
+            saveData();
+          } else {
+            Alert.alert('Atenção:', 'Este inventário encontra-se encerrado!')
+          }
+    };
+  
+  // Função para gravar as alterações dos ben
+  const saveData = async () => { 
+    try {
+
+      const placaInput = fields.placa.trim() ? fields.placa.trim() : fields.codigo;
+
+      const json = await AsyncStorage.getItem('inventario');
+      const inventario = JSON.parse(json);
+      const invent = inventario.codigoInventario;
+
+      const dados = {
+        cdLocalizacaoReal: selectedLocalizacao, // Passa o ID da localização
+        cdEstadoConserReal: selectedEstado, // Passa o ID da estado
+        cdSituacaoAtual: selectedSituacao // Passa o ID da situação
+      };
+
+      if (inventario.isEnabled) {
+        await atualizarInventario(selectedLocalizacao, selectedEstado, selectedSituacao, placaInput, invent);
+        Alert.alert('Sucesso', 'Dados do bem salvos com sucesso.');
+          
+        // Limpar os campos após salvar
+        setFields({
+          placa: '',
+          codigo: '',
+          descricao: '',
+          localizacao: '',
+          estado: '',
+          situacao: '',
+          status: '',
+          valor: ''
+        });
+        setScanned(false);
+        handleAguardandoLeitura();
+        setBtnGravarDisabled(true); // Desabilita o botão gravar
+        limparCampo();
+        ativaEditable();
+
+      } else if (apiLink && codigoInventario) {
+
+
+        await axios.put(`${apiLink}/bens/${placaInput}/${codigoInventario}`, dados);
+
+
+        Alert.alert('Sucesso', 'Dados do bem salvos com sucesso.');
+          
+        // Limpar os campos após salvar
+        setFields({
+          placa: '',
+          codigo: '',
+          descricao: '',
+          localizacao: '',
+          estado: '',
+          situacao: '',
+          status: '',
+          valor: ''
+        });
+        setScanned(false);
+        handleAguardandoLeitura();
+        setBtnGravarDisabled(true); // Desabilita o botão gravar
+        limparCampo();
+        ativaEditable();
+        
+      
+    }
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível salvar os dados do bem.');
     }
@@ -128,87 +471,147 @@ const Leitura = () => {
     return <Text>Sem acesso a câmera!</Text>;
   }
 
+  
+
+  
   return (
     <View style={styles.container}>
+      
       <View style={styles.scannerContainer}>
-        <BarCodeScanner
-          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={StyleSheet.absoluteFillObject}
+        <CameraView 
+          style={styles.camera}
+          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          barcodeScannerSettings={{
+            barcodeTypes: ["qr", "pdf417", 'aztec', 'ean13', 'ean8', 'upc_e', 'datamatrix', 'code39', 'code93', 'itf14',
+                          'codabar', 'code128', 'upc_a']
+          }}
+        />
+
+         {/* Linha Vermelha Centralizada */}
+          <View style={styles.redLine} />
+            
+          <Text style={[styles.text1, { color: corTexto }]}>{texto}</Text> 
+      </View>
+
+      <TextInput
+          style={styles.inputStatus}
+          placeholder=""
+          value={fields.status}
+          onChangeText={(value) => handleInputChange('status', value)}
+          editable={false} 
         />
       
-        
-      </View>
       <ScrollView style={styles.formContainer}>
+        <View style={styles.busca} >
+          <TextInput
+            style={styles.input}
+            placeholder=" Digite a Placa ou Código"
+            value={fields.placa}
+            onChangeText={(value) => handleInputChange('placa', value)}
+            editable={isEditable} // Define se o TextInput é editável
+          />
+          <TextInput
+            style={styles.input}
+            placeholder=" Código"
+            value={fields.codigo}
+            onChangeText={(value) => handleInputChange('codigo', value)}
+            editable={false} // Define se o TextInput é editável
+          />
+        </View>
+      
         <TextInput
-          style={styles.input}
-          placeholder="Placa"
-          value={fields.placa}
-          onChangeText={(value) => handleInputChange('placa', value)}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Descrição"
+          style={styles.inputDescricao}
+          multiline={true} // Permite múltiplas linhas
+          numberOfLines={2} // Número de linhas visíveis
+          placeholder=" Descrição"
           value={fields.descricao}
           onChangeText={(value) => handleInputChange('descricao', value)}
+          editable={false}
         />
         <RNPickerSelect
-          style={pickerSelectStyles.inputAndroid}
+          style={pickerSelectStyles}
           placeholder={{
             label: 'Localização',
             value: null,
           }}
-          onValueChange={(value) => handleInputChange('localizacao', value)}
+          onValueChange={(value) => setSelectedLocalizacao(value)}
           items={localizacoes}
-          value={fields.localizacao}
+          value={selectedLocalizacao}
         />
         <RNPickerSelect
-            style={pickerSelectStyles.inputAndroid}
+            style={pickerSelectStyles}
             placeholder={{
               label: 'Estado de Conservação',
               value: null,
             }}
-            onValueChange={(value) => handleInputChange('estado', value)}
-            items={[
-              { label: 'Excelente', value: 'Excelente' },
-              { label: 'Bom', value: 'Bom' },
-              { label: 'Regular', value: 'Regular' },
-              { label: 'Péssimo', value: 'Péssimo' },
-            ]}
-            value={fields.estado}
+            onValueChange={(value) => setSelectedEstado(value)}
+            items={estados}
+            value={selectedEstado}
         />
         <RNPickerSelect
-            style={pickerSelectStyles.inputAndroid}
+            style={pickerSelectStyles}
             placeholder={{
               label: 'Situação',
               value: null,
             }}
-            onValueChange={(value) => handleInputChange('situacao', value)}
+            onValueChange={(value) => setSelectedSituacao(value)}
             items={situacoes}
-            value={fields.situacao}
+            value={selectedSituacao}
         />
+        <TextInput
+          style={styles.input}
+          placeholder= " Valor"
+          value={fields.valor}
+          onChangeText={(value) => handleInputChange('valor', value)}
+          editable={false}
+        />
+        
         <View style={styles.buttonContainer}>
-     
+          <View style={styles.button}>
             <Button
-              title={'Limpar e Ativar Leitura'}
+              title={'Limpar'}
               onPress={() => {
                 setScanned(false);
+                handleAguardandoLeitura();
+                setBtnLimparDisabled(false);
+                setBtnGravarDisabled(true); // Desabilita o botão gravar
+                limparCampo();
+                ativaEditable();
                 setFields({
                   placa: '',
                   descricao: '',
                   localizacao: '',
                   estado: '',
-                  situacao: ''
+                  situacao: '',
+                  status: ''
                 });
               }}
               color="#5f9ea0"
             />
-         
-        </View>
-        <Button title="Salvar Dados" onPress={saveData}  color="#5f9ea0" />
-        {loading && <Text>Carregando...</Text>}
+            </View>
+            <View style={styles.button}>
+              <Button 
+              title="Localizar" 
+              onPress={handleLocalizar}  
+              color="#5f9ea0" 
+              disabled={isBtnLimparDisabled} // Desativa o botão se isButtonDisabled for true
+              />
+            </View>
+            <View style={styles.button}>
+              <Button 
+              title="Gravar" 
+              onPress={() => {salvar(); setBtnLimparDisabled(false)}}  
+              color="#5f9ea0"
+              disabled={isBtnGravarDisabled} // Desativa o botão se isButtonDisabled for true 
+              
+              />
+            </View>
+          </View>
         
+        {loading && <Text>Carregando...</Text>}
+               
       </ScrollView>
-    </View>
+    </View>         
   );
 };
 
@@ -220,10 +623,21 @@ const styles = StyleSheet.create({
   },
   scannerContainer: {
     flex: 1,         // Para ocupar espaço disponível
-    maxHeight: 300,  // Limitar a altura máxima
+    maxHeight: 150,  // Limitar a altura máxima
     minHeight: 10,  // Limitar a altura mínima
-    padding: 20,
-    marginBottom: 10,
+    marginBottom: 20,
+  },
+  camera: {
+    flex: 1, // Para ocupar espaço disponível
+    padding: 10,
+  },
+  redLine: {
+    position: 'absolute', // Faz a linha sobrepor a câmera
+    top: '45%', // Posiciona a linha no meio
+    left: 0,
+    right: 0,
+    height: 1, // Altura da linha
+    backgroundColor: 'red', // Cor da linha
   },
   formContainer: {
     flex: 1,
@@ -232,10 +646,31 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     borderColor: 'gray',
-    borderWidth: 1,
+    borderWidth: 0,
     marginBottom: 10,
     padding: 10,
-    fontSize: 16
+    fontSize: 16,
+    color: '#5f9ea0',
+    backgroundColor: '#fff',
+    textAlign: 'left',
+  },
+  inputDescricao: {
+    height: 65,
+    borderColor: 'gray',
+    borderWidth: 0,
+    marginBottom: 10,
+    padding: 10,
+    fontSize: 16,
+    color: '#5f9ea0',
+    backgroundColor: '#fff',
+    textAlign: 'left',
+  },
+  inputStatus: {
+    height: 20,
+    fontSize: 14,
+    color: 'red',
+    textAlign: 'center',
+    paddingBottom: 5
   },
   scannedDataContainer: {
     marginTop: 10,
@@ -244,29 +679,56 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
   },
-  scannedDataTitle: {
-    fontWeight: 'bold',
-    fontSize: 10,
-  },
   buttonContainer: {
-    flex: 1,
-    marginBottom: 10,
-    marginTop: 10
+    flexDirection: 'row', // Alinha os botões em linha
+    justifyContent: 'space-between', // Espaco entre os botões
+    width: '100%', // Para ocupar toda a largura
+    paddingHorizontal: 10, // Para adicionar espaçamento nas laterais
+    marginTop: 30
   },
-  
+  button: {
+    flex: 1, // Faz com que cada botão ocupe a mesma largura
+    marginHorizontal: 5, // Adiciona um pequeno espaço entre os botões
+  },
+  text: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  text1: {
+    fontSize: 12, // Tamanho da fonte
+    textAlign: 'center', // Centraliza o texto
+  }, 
+  busca: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  }
 });
 
 
+// Estilos específicos para o RNPickerSelect
 const pickerSelectStyles = StyleSheet.create({
-  inputAndroid: {
-    fontSize: 14,
-    paddingVertical: 8,
+  inputIOS: {
+    fontSize: 16,
     paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: 'gray',
-    borderRadius: 4,
-    color: 'black',
+    borderColor: 'black',
+    borderRadius: 5,
+    color: '#5f9ea0',
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    textAlign: 'left'
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    borderColor: 'black',
+    borderRadius: 5,
+    color: '#5f9ea0',
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    textAlign: 'left'
   },
 });
+
 
 export default Leitura;

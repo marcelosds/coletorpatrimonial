@@ -1,40 +1,35 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Button, Text, Alert, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, TextInput, Button, Alert, Image } from 'react-native';
+import { createUserTable, authenticateUser } from '../database/baseSqlite';
 import logo from '../../assets/logo.png';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [password, setPassword] = useState('');
+ 
+  useEffect(() => {
 
-  // Função que lida com o login
-  const handleLogin = () => {
-    // Verifique se o email e a senha estão corretos
-    const emailCorreto = 'marcelosds@gmail.com'; // Troque isso pelo seu email correto
-    const senhaCorreta = '123456'; // Troque isso pela sua senha correta
+    createUserTable(); // Criar a tabela ao iniciar o aplicativo
 
-    if (email === emailCorreto && senha === senhaCorreta) {
-      // Se o email e a senha estão corretos, navegue para a tela de Configuracao
-      navigation.navigate('Configuracao');
+  }, []);
 
-      // Limpar os campos após o login bem-sucedido
+  const handleAuth = async () => {
+      // Verifica as credenciais do usuário
+      const user = await authenticateUser(email, password);
+      if (user) {
+        //Alert.alert('Sucesso', `Login realizado com sucesso! Bem-vindo, ${user.fullName}.`);
+        navigation.navigate('Principal'); // Navegar para a tela de Principal
+      } else {
+        Alert.alert('Erro', 'E-mail ou senha incorretos.');
+      }
       setEmail('');
-      setSenha('');
+      setPassword('');
 
-    } else {
-      // Se o email ou a senha estiverem incorretos, exiba um alerta
-      Alert.alert('Erro', 'Email ou senha incorretos!');
-
-      // Limpar campos após uma tentativa de login, mesmo que tenha falhado
-      setEmail('');
-      setSenha('');
-
-    }
-  };
+    };
 
   return (
-
     <View style={styles.container}>
-        <View style={styles.header}>
+      <View style={styles.header}>
             <Image style={styles.logo} source={logo} />
             <Text style={styles.title}>Coletor de Dados Patrimoniais</Text>
         </View> 
@@ -49,25 +44,34 @@ const Login = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="Senha"
-        value={senha}
-        onChangeText={setSenha}
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry={true} // Isso garante que a senha apareça como asteriscos
       />
-       
-       <View style={styles.buttonContainer}>
-            <View style={styles.btn}>   
-                <Button title="Login" onPress={handleLogin} color="#5f9ea0" />
-            </View>
-            <View style={styles.btn}>
-                <Button title="Criar Cadastro" onPress={() => {}} color="#5f9ea0" />
-            </View>
+
+      <View style={styles.recuperaContainer}>
+        <Text 
+          style={styles.link1} 
+          onPress={() => navigation.navigate('Recupera')} // Recuperar senha
+        >
+          Esqueci minha senha!
+        </Text>
       </View>
 
+      <View style={styles.buttonContainer}>
+        <Button title="Login" onPress={handleAuth} color="#5f9ea0" />
+        <Text 
+          style={styles.link} 
+          onPress={() => navigation.navigate('Cadastro')} // Navegar para Cadastro
+        >
+          Criar Cadastro
+        </Text>
+      </View>
     </View>
   );
 };
 
-// Estilos para a tela
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -76,9 +80,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   title: {
-    fontSize: 22,
-    marginTop: 10,
-    marginBottom: 100,
+    fontSize: 24,
+    marginBottom: 20,
     textAlign: 'center',
   },
   input: {
@@ -90,21 +93,30 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#fff',
   },
+  link: {
+    marginTop: 20,
+    color: '#5f9ea0',
+    textAlign: 'center',
+  },
+  link1: {
+    marginTop: 1,
+    color: '#5f9ea0',
+    textAlign: 'right',
+  },
   header: {
     width: "100%",
-    alignItems: "center"
-  },
-  logo: {
-    width: 170,
-    height: 150,
+    alignItems: "center",
+    marginBottom: 60
   },
   buttonContainer: {
     marginTop: 50
   },
-  btn: {
-    marginVertical: 5
-  }
-
+  recuperaContainer: {
+    alignItems: "flex-end"
+  },
+ 
 });
 
 export default Login;
+
+
