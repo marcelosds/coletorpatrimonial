@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Leitura from "./leitura";
 import Configuracao from "./configuracao";
 import Listabens from './listabens';
-import { Button, View, Text, StyleSheet, Alert } from 'react-native';
+import { Button, View, Text, StyleSheet, Alert, TextInput } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import React, { useState, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import { getUserIdByEmail } from '../database/baseSqlite';
 
 const Tab = createBottomTabNavigator();
 
+
 // Definir se usuário pode rá ser excluido ou não
 const handleCheckboxChange = (newValue) => {
 setIsEditable(newValue);
@@ -24,7 +25,6 @@ function Principal() {
 
   const [apiLink, setApiLink] = useState('');  
   const [isConnected, setIsConnected] = useState(false); // Estado para rastrear a conexão
-  
 
     // Carrega os dados da configuração para o AsyncStorage
   useFocusEffect(
@@ -151,10 +151,14 @@ function Principal() {
 // Componente para tela de Logout
 const Sair = ({ navigation }) => {
 
+    const [emailText, setEmail] = useState('');
+
     const [isChecked, setIsChecked] = useState(false); // Estado da Checkbox
+    const [isEditable, setIsEditable] = useState(false); // Estado para controle de edição
 
     const handleCheckboxChange = (newValue) => {
       setIsChecked(newValue); // Atualiza o estado da Checkbox
+      setIsEditable(newValue);
     };
 
     const handleLogout = async () => {
@@ -175,11 +179,17 @@ const Sair = ({ navigation }) => {
    
     const excluirConta = async () => {
 
-      const email = "marcelosds@gmail.com";
+      if ( emailText ) {
 
-      await getUserIdByEmail(email);
+        const email = emailText;
 
-      navigation.navigate('Login'); // Navegue para a tela de login
+        await getUserIdByEmail(email);
+
+      } else {
+        Alert.alert('Erro:', 'Informe o email do usuário!');
+      }
+
+      setEmail('');
 
     };
 
@@ -201,11 +211,21 @@ const Sair = ({ navigation }) => {
         />
         <Text style={styles.textbox}>Deseja excluir sua conta de acesso?</Text>
       </View>
+     
       <View style={styles.button}>
+        <TextInput
+          style={styles.input}
+          placeholder="Digite seu e-mail"
+          value={emailText}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          editable={isEditable}
+        />
         <Button 
-            title="Excluir Minha Conta"
-            onPress={excluirConta} color="#5f9ea0" // Chama a função de exclusão quando pressionado
-            disabled={!isChecked} // Desativa o botão se a Checkbox não estiver marcada
+          title="Excluir Minha Conta"
+          onPress={excluirConta} color="#5f9ea0" // Chama a função de exclusão quando pressionado
+          disabled={!isChecked} // Desativa o botão se a Checkbox não estiver marcada
         />
       </View>
       </>
@@ -233,7 +253,15 @@ const styles = StyleSheet.create({
     button: {
       paddingBottom: 20,
       paddingHorizontal: 20
-    }
+    },
+    input: {
+      height: 40,
+      borderColor: 'gray',
+      borderWidth: 1,
+      marginBottom: 10,
+      paddingHorizontal: 10,
+      borderRadius: 5,
+    },
   });
 
 export default Principal;

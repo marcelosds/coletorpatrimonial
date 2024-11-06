@@ -761,7 +761,6 @@ export const recuperarSenha = async (email, novaSenha) => {
               'UPDATE users SET password = ? WHERE email = ?',
               [novaSenha, email],
               () => {
-                console.log('Senha atualizada com sucesso!');
                 resolve('Senha atualizada com sucesso!');
               },
               (_, error) => {
@@ -797,8 +796,11 @@ export const getUserIdByEmail = (email) => {
 
             excluirUsuarioPorEmail(email);
 
+            navigation.navigate('Login'); // Navegue para a tela de login
+
           } else {
             resolve(null); // Nenhum usuário encontrado
+            Alert.alert('Erro:', 'Nenhum usuário encontrado!');
           }
         },
         (_, error) => reject(error)
@@ -815,11 +817,8 @@ export const excluirUsuarioPorEmail = async (email) => {
         const userId = await getUserIdByEmail(email); // Função que obtém o ID do usuário pelo e-mail
 
         if (userId) {
-            console.log(`Usuário encontrado com ID: ${userId}`);
 
-            // Aqui você pode ter a lógica para excluir a conta
-            // Por exemplo:
-            await deleteUserById(userId); // Implemente essa função para a exclusão
+            await deleteUserById(userId);
             
         } 
     } catch (error) {
