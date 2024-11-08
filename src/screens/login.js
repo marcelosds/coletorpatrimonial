@@ -1,11 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, Alert, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, Alert, Image, TouchableOpacity } from 'react-native';
 import { createUserTable, authenticateUser } from '../database/baseSqlite';
-import logo from '../../assets/logo.png';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [logoUri, setLogoUri] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // Configurar imagem do logo
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      const storedLogoUri = await AsyncStorage.getItem('logoUri');
+      if (storedLogoUri) {
+        setLogoUri(storedLogoUri);
+      }
+    };
+
+    loadLogo();
+  }, []);
+
+
+  const requestPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert('Acesso à galeria', 'Permissão para acessar a galeria é necessária!');
+    }
+  };
+
+  const pickImage = async () => {
+    await requestPermission();
+    
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setLogoUri(result.assets[0].uri); // Armazena a URI da imagem
+      await AsyncStorage.setItem('logoUri', result.assets[0].uri); // Salva no AsyncStorage
+      //console.log(result.assets[0].uri); // URI da imagem selecionada
+    }
+  };
  
   useEffect(() => {
 
@@ -30,9 +70,21 @@ const Login = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-            <Image style={styles.logo} source={logo} />
-            <Text style={styles.title}>Coletor de Dados Patrimoniais</Text>
-        </View> 
+      {!logoUri ? (
+        <Button title="Selecionar Logo" onPress={pickImage} />
+      ) : (
+        <Image/>
+      )}
+      {logoUri && (
+        <TouchableOpacity onPress={pickImage}>
+        <Image
+          source={{ uri: logoUri }}
+          style={styles.logo}
+        />
+        </TouchableOpacity>
+      )}
+        <Text style={styles.title}>Coletor de Dados Patrimoniais</Text>
+      </View> 
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -107,6 +159,11 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     marginBottom: 60
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
   },
   buttonContainer: {
     marginTop: 50

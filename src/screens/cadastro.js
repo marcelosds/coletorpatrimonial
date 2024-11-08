@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, TextInput, Button, Alert, Text, Image } from 'react-native';
 import { addUser } from '../database/baseSqlite';
-import logo from '../../assets/logo.png';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Cadastro = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [logoUri, setLogoUri] = useState(null);
+
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      const storedLogoUri = await AsyncStorage.getItem('logoUri');
+      if (storedLogoUri) {
+        setLogoUri(storedLogoUri);
+        console.log(storedLogoUri);
+      }
+    };
+
+    loadLogo();
+  }, []);
 
   const handleCadastro = async () => {
     if (!fullName || !email || !password) {
@@ -30,8 +44,8 @@ const Cadastro = ({ navigation }) => {
   return (
     <View style={styles.container}>
         <View style={styles.header}>
-            <Image style={styles.logo} source={logo} />
-            <Text style={styles.title}>Coletor de Dados Patrimoniais</Text>
+          {logoUri && <Image source={{ uri: logoUri }} style={styles.logo} />}
+          <Text style={styles.title}>Coletor de Dados Patrimoniais</Text>
         </View>
       <TextInput
         style={styles.input}
@@ -98,6 +112,11 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     marginBottom: 60
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
   },
   buttonContainer: {
     marginTop: 50

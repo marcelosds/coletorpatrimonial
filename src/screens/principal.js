@@ -71,6 +71,7 @@ function Principal() {
     return () => clearInterval(interval); // Limpeza para evitar vazamentos de memória
   }, [apiLink]); // Adiciona apiLink como dependência
 
+
   useEffect(() => {
     //console.log("isConnected:", isConnected); // Log do estado isConnected
   }, [isConnected]); // Log quando isConnected mudar

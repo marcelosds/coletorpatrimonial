@@ -11,8 +11,8 @@ const Configuracao = ( ) => {
   const [codigoUnidadeGestora, setCodigoUnidadeGestora] = useState('');
   const [isEditable, setIsEditable] = useState(false); // Estado para controle de edição
   const [isEnabled, setIsEnabled] = useState(false); // Estado para controle de edição
-   const [isEnabledSwitch, setIsEnabledSwitch] = useState(false); // Estado inicial do switch
-
+  const [isEnabledSwitch, setIsEnabledSwitch] = useState(false); // Estado inicial do switch
+  
 
   const toggleSwitch = () => {
     setIsEnabledSwitch(previousState => !previousState); // Inverte o estado do switch
@@ -32,7 +32,7 @@ const Configuracao = ( ) => {
     }
   };
 
-   
+      
   // Carrega e mostra os dados que já estão gravados no AsyncStorage
   useEffect(() => {
     const loadData = async () => {

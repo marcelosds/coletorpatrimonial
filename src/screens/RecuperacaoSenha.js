@@ -1,11 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet, Image, Text } from 'react-native';
 import { recuperarSenha } from '../database/baseSqlite'; // Importe a função criada
-import logo from '../../assets/logo.png';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RecuperarSenha = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
+  const [logoUri, setLogoUri] = useState(null);
+
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      const storedLogoUri = await AsyncStorage.getItem('logoUri');
+      if (storedLogoUri) {
+        setLogoUri(storedLogoUri);
+        console.log(storedLogoUri);
+      }
+    };
+
+    loadLogo();
+  }, []);
+
 
   const handleRecuperarSenha = async () => {
     try {
@@ -23,7 +38,7 @@ const RecuperarSenha = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-            <Image style={styles.logo} source={logo} />
+            {logoUri && <Image source={{ uri: logoUri }} style={styles.logo} />}
             <Text style={styles.title}>Coletor de Dados Patrimoniais</Text>
       </View>
       <TextInput
@@ -63,6 +78,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 20,
     textAlign: 'center',
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
   },
   input: {
     height: 40,
