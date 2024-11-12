@@ -3,7 +3,7 @@ import { View, TextInput, Button, StyleSheet, Text, ScrollView, Alert, Switch } 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import { createTable, handleLimpar, carregaData, syncDataWithServer } from '../database/baseSqlite';
-
+import axios from 'axios';
 
 const Configuracao = ( ) => {
   const [apiLink, setApiLink] = useState('');
@@ -54,6 +54,22 @@ const Configuracao = ( ) => {
     loadData(); // Chama a função para carregar os dados
   }, []); // Executa uma vez na montagem do componente
 
+
+  const obterToken = async (email) => {
+    try {
+        const response = await axios.post(`${apiLink}/acesso`, { email });
+        const tokenObtido = response.data.token;
+        
+        console.log(tokenObtido); // Imprime o token
+
+        // Salva o token no AsyncStorage
+        await AsyncStorage.setItem('userToken', tokenObtido);
+
+    } catch (error) {
+        console.error('Erro ao obter o token:', error.message);
+    }
+  };
+
   
   // Função para gravar todos os dados no AsyncStorage os dados informados
   const Save = async () => {
@@ -69,7 +85,9 @@ const Configuracao = ( ) => {
       };
 
       await AsyncStorage.setItem('inventario', JSON.stringify(inventario));
-     
+
+      obterToken();
+
       Alert.alert('Sucesso', 'Configurações salvas.');
 
       } else {
@@ -78,18 +96,12 @@ const Configuracao = ( ) => {
   };
 
 
-  // Busca na API inventários da base de dados
-  const fetchBens = async () => {
-    try {
+  // Gravar as cosnfigurações informadas
+  const Gravar = async () => {
+
       createTable(); //Cria tabela INVENTARIOITEM caso não exista
       Save();
-         
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível acessar o servidor informado!');
-    } finally {
-     
-    }
-  };
+   };
 
 
   return (
@@ -137,7 +149,7 @@ const Configuracao = ( ) => {
         <Button 
           title="GRAVAR" 
           style={styles.button}
-          onPress={fetchBens} 
+          onPress={Gravar} 
           color="#5f9ea0"
         />
         <Text></Text>

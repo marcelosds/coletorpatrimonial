@@ -12,7 +12,6 @@ import Checkbox from 'expo-checkbox';
 import { getUserIdByEmail } from '../database/baseSqlite';
 
 
-
 const Tab = createBottomTabNavigator();
 
 
@@ -25,8 +24,8 @@ function Principal() {
 
   const [apiLink, setApiLink] = useState('');  
   const [isConnected, setIsConnected] = useState(false); // Estado para rastrear a conexão
-
-    // Carrega os dados da configuração para o AsyncStorage
+  
+  // Carrega os dados da configuração para o AsyncStorage
   useFocusEffect(
     React.useCallback(() => {
     const loadData = async () => {
@@ -49,9 +48,12 @@ function Principal() {
     // Aqui você pode usar um efeito para verificar a conexão com a API periodicamente ou em um evento
   useEffect(() => {
     const checkConnection = async () => {
+      const token = await AsyncStorage.getItem('userToken');
       try {
         if (apiLink) {
-          const response = await fetch(`${apiLink}/inventario`);
+          const response = await fetch(`${apiLink}/inventario`, {
+            headers: { Authorization: token },
+          });
           if (response.ok) {
             setIsConnected(true);
           } else {

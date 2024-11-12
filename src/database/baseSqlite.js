@@ -13,7 +13,7 @@ export const createUserTable = () => {
   db.transaction(tx => {
     //tx.executeSql(
       //`DROP TABLE users;`
-    //);
+   // );
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,6 +24,8 @@ export const createUserTable = () => {
     );
   });
 };
+
+
 
 // Função para adicionar um novo usuário
 export const addUser = (fullName, email, password) => {
@@ -243,16 +245,25 @@ export const carregaData = async () => {
         const codigo = (inventario.codigoInventario.toString());
         const ug = (inventario.codigoUnidadeGestora.toString());
 
+        const token = await AsyncStorage.getItem('userToken');
 
-        const response = await axios.get(`${api}/benssqlite/${codigo}`); // Endpoint da API
+        const response = await axios.get(`${api}/benssqlite/${codigo}`, {
+          headers: { Authorization: token },
+        }); // Endpoint da API
 
-        const locais = await axios.get(`${api}/locais`);  
+        const locais = await axios.get(`${api}/locais`, {
+          headers: { Authorization: token },
+        });  
 
         
-        const situacao = await axios.get(`${api}/situacao`); 
+        const situacao = await axios.get(`${api}/situacao`, {
+          headers: { Authorization: token },
+        }); 
 
 
-        const estado = await axios.get(`${api}/estado`);  
+        const estado = await axios.get(`${api}/estado`, {
+          headers: { Authorization: token },
+        });  
 
 
         importDataToSQLite(response.data); // Importa os dados para o SQLite após definir bens
@@ -423,10 +434,13 @@ export const syncDataWithServer = async () => {
           if (inventario) {
               const api = (inventario.apiLink);
               const codigo = (inventario.codigoInventario);
+              const token = await AsyncStorage.getItem('userToken');
               
               try {
                   // Envia os dados para o servidor
-                  await axios.put(`${api}/base/${codigo}`, dadosParaEnviar);
+                  await axios.put(`${api}/base/${codigo}`, dadosParaEnviar, {
+                    headers: { Authorization: token },
+                  });
                   Alert.alert('Informação:', 'Inventários atualizados no servidor com sucesso!')
               } catch (error) {
                 Alert.alert('Atenção', 'Erro ao sincronizar itens, tente novamente!')

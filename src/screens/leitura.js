@@ -39,12 +39,12 @@ const Leitura = () => {
     valor: '',
   });
 
-
   // Limpa as combobox
   const limparCampo = () => {
     setSelectedLocalizacao(null); 
     setSelectedEstado(null);
     setSelectedSituacao(null);
+    
   };
 
   // Deixa a edição do campo placa desabilitado após encontrar bem
@@ -104,9 +104,11 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
     loadData(); // Chama a função para carregar os dados
     }, [])); // Executa uma vez na montagem do componente
 
+
+
   // Carrega as localizações da base de dados informada nas configurações    
   useEffect(() => {
-    const carregaLocais = async ( ) => {
+    const carregaLocais = async () => {
     try {
           const json = await AsyncStorage.getItem('inventario');
           const inventario = JSON.parse(json);
@@ -126,8 +128,13 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
           setLocalizacoes(locaisFormatados);
           
           } else if (apiLink && codigoUnidadeGestora) {
+
+          const token = await AsyncStorage.getItem('userToken');
        
-          const response = await axios.get(`${apiLink}/locais/${codigoUnidadeGestora}`);
+          const response = await axios.get(`${apiLink}/locais/${codigoUnidadeGestora}`, {
+            headers: { Authorization: token },
+          });
+          
           // Supondo que a resposta é um array de objetos com `label` e `value`
           const formattedData = response.data.map((item) => ({
             label: item.dsLocalizacao, // ajuste conforme o formato do seu objeto
@@ -147,7 +154,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
 
   // Carrega as situações da base de dados informada nas configurações 
   useEffect(() => {
-    const carregaSituacao = async ( ) => {
+    const carregaSituacao = async () => {
     try {
 
       const json = await AsyncStorage.getItem('inventario');
@@ -169,7 +176,11 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         
         } else if (apiLink) {
 
-      const response = await axios.get(`${apiLink}/situacao`);
+      const token = await AsyncStorage.getItem('userToken');    
+
+      const response = await axios.get(`${apiLink}/situacao`, {
+        headers: { Authorization: token },
+      });
       // Supondo que a resposta é um array de objetos com `label` e `value`
       const formattedData = response.data.map((item) => ({
         label: item.dsSituacao, // ajuste conforme o formato do seu objeto
@@ -189,7 +200,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
 
   // Carrega as estados de conservação da base de dados informada nas configurações 
   useEffect(() => {
-    const carregaEstados = async ( ) => {
+    const carregaEstados = async () => {
     try {
 
       const json = await AsyncStorage.getItem('inventario');
@@ -211,7 +222,11 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         
         } else if (apiLink) {
 
-      const response = await axios.get(`${apiLink}/estado`);
+      const token = await AsyncStorage.getItem('userToken');
+
+      const response = await axios.get(`${apiLink}/estado`, {
+        headers: { Authorization: token },
+      });
       // Supondo que a resposta é um array de objetos com `label` e `value`
       const formattedData = response.data.map((item) => ({
         label: item.dsEstadoConser, // ajuste conforme o formato do seu objeto
@@ -243,6 +258,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
     handleLeituraRealizada();
   };
 
+
   const fetchBemData = async (placa) => {
     try {
 
@@ -268,8 +284,12 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         setSelectedSituacao(bem.cdSituacaoAtual);
 
       } else if (apiLink && codigoInventario) {
+
+      const token = await AsyncStorage.getItem('userToken');
       
-      const response = await axios.get(`${apiLink}/bens/${placa}/${codigoInventario}`);
+      const response = await axios.get(`${apiLink}/bens/${placa}/${codigoInventario}`, {
+        headers: { Authorization: token },
+      });
       const bem = response.data; // A resposta já vem em JSON, então direto 'data'.
       setFields({
         placa: bem.nrPlaca.trim() || '', // Guardar como string ou vazio
@@ -285,7 +305,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
       
     }
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível obter os dados do bem. Verifique se o código está correto e tente novamente.');
+      Alert.alert('Atenção:', 'Bem não localizado, nesse inventário!');
     } finally {
       setLoading(false);
       setBtnGravarDisabled(false);
@@ -310,7 +330,11 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         
       } else if (apiLink && codigoInventario) {
 
-      const response = await axios.get(`${apiLink}/bens/${codigoInventario}`);
+      const token = await AsyncStorage.getItem('userToken');
+
+      const response = await axios.get(`${apiLink}/bens/${codigoInventario}`, {
+        headers: { Authorization: token },
+      });
       setBensData(response.data); // Armazena os dados dos bens
     }
     } catch (error) {
@@ -321,7 +345,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
   }, [apiLink, codigoInventario]);
 
 
-  // Função para localizar a placa informada na caixa de texto
+  // Função para localizar a placa ou código informado(a) na caixa de texto
   const handleLocalizar = () => {
 
     const placaInput = fields.placa.trim(); // Captura o texto do TextInput e remove espaços em branco
@@ -341,7 +365,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
       setBtnGravarDisabled(false); // Ativa o botão após a ação
       destivaEditable();
     } else {
-      Alert.alert('Atenção', 'Bem não localizado!'); // Alerta se não encontrar
+      Alert.alert('Atenção:', 'Bem não localizado, nesse inventário!'); // Alerta se não encontrar
     }
   };
 
@@ -368,7 +392,11 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
 
               } else if (apiLink && codigoInventario) {
 
-                const InventarioResponse = await axios.get(`${apiLink}/inventario/${codigoInventario}`); // Endpoint da API
+                const token = await AsyncStorage.getItem('userToken');
+
+                const InventarioResponse = await axios.get(`${apiLink}/inventario/${codigoInventario}`, {
+                  headers: { Authorization: token },
+                }); // Endpoint da API
 
             setStInventario(InventarioResponse.data.stInventario); // Armazena os dados no estado
 
@@ -433,8 +461,11 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
 
       } else if (apiLink && codigoInventario) {
 
+        const token = await AsyncStorage.getItem('userToken');
 
-        await axios.put(`${apiLink}/bens/${placaInput}/${codigoInventario}`, dados);
+        await axios.put(`${apiLink}/bens/${placaInput}/${codigoInventario}`, dados, {
+          headers: { Authorization: token },
+        });
 
 
         Alert.alert('Sucesso', 'Dados do bem salvos com sucesso.');

@@ -20,8 +20,7 @@ const Listabens = () => {
   const [apiLink, setApiLink] = useState('');
   const [codigoInventario, setCodigoInventario] = useState('');
 
-  
-
+ 
   // Carrega os dados da configuração para o AsyncStorage
   useFocusEffect(
     React.useCallback(() => {
@@ -37,7 +36,9 @@ const Listabens = () => {
         }    
     }
     loadData(); // Chama a função para carregar os dados
+  
     }, [])); // Executa uma vez na montagem do componente
+
 
   
   // Função para buscar os bens
@@ -69,14 +70,23 @@ const Listabens = () => {
 
               } else if (apiLink && codigoInventario) {
 
+                const token = await AsyncStorage.getItem('userToken');
 
-                const response = await axios.get(`${apiLink}/bens/${codigoInventario}`); // Endpoint da API
+                const response = await axios.get(`${apiLink}/bens/${codigoInventario}`, {
+                    headers: { Authorization: token },
+                  }); // Endpoint da API
 
-                const totalResponse = await axios.get(`${apiLink}/total/${codigoInventario}`); // Endpoint da API
+                const totalResponse = await axios.get(`${apiLink}/total/${codigoInventario}`, {
+                  headers: { Authorization: token },
+                }); // Endpoint da API
 
-                const inventariadosResponse = await axios.get(`${apiLink}/inventariados/${codigoInventario}`); // Endpoint da API
+                const inventariadosResponse = await axios.get(`${apiLink}/inventariados/${codigoInventario}`, {
+                  headers: { Authorization: token },
+                }); // Endpoint da API
 
-                const InventarioResponse = await axios.get(`${apiLink}/inventario/${codigoInventario}`); // Endpoint da API
+                const InventarioResponse = await axios.get(`${apiLink}/inventario/${codigoInventario}`, {
+                  headers: { Authorization: token },
+                }); // Endpoint da API
 
             setBens(response.data); // Armazena os dados no estado
                 

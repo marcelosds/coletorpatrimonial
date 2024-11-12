@@ -4,11 +4,12 @@ import { createUserTable, authenticateUser } from '../database/baseSqlite';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
+
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [logoUri, setLogoUri] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null); // Configurar imagem do logo
+
 
   useEffect(() => {
     const loadLogo = async () => {
@@ -43,7 +44,6 @@ const Login = ({ navigation }) => {
     if (!result.canceled) {
       setLogoUri(result.assets[0].uri); // Armazena a URI da imagem
       await AsyncStorage.setItem('logoUri', result.assets[0].uri); // Salva no AsyncStorage
-      //console.log(result.assets[0].uri); // URI da imagem selecionada
     }
   };
  
@@ -56,8 +56,8 @@ const Login = ({ navigation }) => {
   const handleAuth = async () => {
       // Verifica as credenciais do usuário
       const user = await authenticateUser(email, password);
+      
       if (user) {
-        //Alert.alert('Sucesso', `Login realizado com sucesso! Bem-vindo, ${user.fullName}.`);
         navigation.navigate('Principal'); // Navegar para a tela de Principal
       } else {
         Alert.alert('Erro', 'E-mail ou senha incorretos.');
@@ -71,7 +71,7 @@ const Login = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.header}>
       {!logoUri ? (
-        <Button title="Selecionar Logo" onPress={pickImage} />
+        <Button title="Clique aqui para carregar imagem logomarca" onPress={pickImage} />
       ) : (
         <Image/>
       )}
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     marginBottom: 20,
+    borderRadius: 10
   },
   buttonContainer: {
     marginTop: 50
