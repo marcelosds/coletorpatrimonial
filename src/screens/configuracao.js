@@ -86,7 +86,7 @@ const Configuracao = ( ) => {
 
       await AsyncStorage.setItem('inventario', JSON.stringify(inventario));
 
-      obterToken();
+      //obterToken();
 
       Alert.alert('Sucesso', 'Configurações salvas.');
 
@@ -101,6 +101,7 @@ const Configuracao = ( ) => {
 
       createTable(); //Cria tabela INVENTARIOITEM caso não exista
       Save();
+      obterToken();
    };
 
 

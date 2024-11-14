@@ -98,6 +98,7 @@ export const createTable = () => {
         cdSituacaoAtual INTEGER,
         dsSituacao TEXT,
         vlAtual REAL,
+        dsObservacao TEXT,
         cdInventario INTEGER,
         cdAlteracao INTEGER,
         stInventario INTEGER
@@ -217,6 +218,7 @@ export const excluirTabela = () => {
         cdSituacaoAtual INTEGER,
         dsSituacao TEXT,
         vlAtual REAL,
+        dsObservacao TEXT,
         cdInventario INTEGER,
         cdAlteracao INTEGER,
         stInventario INTEGER
@@ -291,8 +293,8 @@ const importDataToSQLite = (bens) => {
           const count = results.rows.item(0)['COUNT(*)'];
           if (count === 0) { // Se não existir, insira os dados
             tx.executeSql(
-              `INSERT INTO INVENTARIOITEM (cdItem, nrPlaca, dsReduzida, cdLocalizacaoReal, dsLocalizacao, cdEstadoConserReal, dsEstadoConser, cdSituacaoAtual, dsSituacao, vlAtual, cdInventario, cdAlteracao, stInventario)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              `INSERT INTO INVENTARIOITEM (cdItem, nrPlaca, dsReduzida, cdLocalizacaoReal, dsLocalizacao, cdEstadoConserReal, dsEstadoConser, cdSituacaoAtual, dsSituacao, vlAtual, dsObservacao, cdInventario, cdAlteracao, stInventario)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
               [
                 item.cdItem,
                 item.nrPlaca,
@@ -304,6 +306,7 @@ const importDataToSQLite = (bens) => {
                 item.cdSituacaoAtual,
                 item.dsSituacao,
                 item.vlAtual,
+                item.dsObservacao,
                 item.cdInventario,
                 item.cdAlteracao,
                 item.stInventario,
@@ -421,7 +424,8 @@ export const syncDataWithServer = async () => {
                   cdLocalizacaoReal: item.cdLocalizacaoReal, // Passa o ID da localização
                   cdEstadoConserReal: item.cdEstadoConserReal, // Passa o ID da estado
                   cdSituacaoAtual: item.cdSituacaoAtual, // Passa o ID da situação
-                  cdAlteracao: item.cdAlteracao // Passa o ID da situação
+                  cdAlteracao: item.cdAlteracao, // Passa o ID da situação
+                  dsObservacao: item.dsObservacao
               };
               //console.log(novoItem);
               itemsToUpdate.push(novoItem); // Adiciona o novo item ao array
@@ -467,6 +471,7 @@ export const getItemsFromSQLite = async () => {
                       cdSituacaoAtual,
                       dsSituacao,
                       vlAtual,
+                      dsObservacao,
                       cdInventario,
                       CASE WHEN cdAlteracao IS NULL THEN '' ELSE 'BEM JÁ INVENTARIADO!' END AS StatusBem,
                       stInventario FROM INVENTARIOITEM WHERE cdInventario = ${inventario.codigoInventario}`, // Selecione conforme necessário
@@ -689,7 +694,7 @@ export const getSituacaoInven = async () => {
 
 
 // Função para atualizar os bens na base sqlite após gravar alterações
-export const atualizarInventario = async (cdLocalizacaoReal, cdEstadoConserReal, cdSituacaoAtual, placaInput, invent) => {
+export const atualizarInventario = async (cdLocalizacaoReal, cdEstadoConserReal, cdSituacaoAtual, dsObservacao, placaInput, invent) => {
     return new Promise((resolve, reject) => {
         // Iniciar a transação
         db.transaction(tx => {
@@ -697,10 +702,11 @@ export const atualizarInventario = async (cdLocalizacaoReal, cdEstadoConserReal,
                 `UPDATE INVENTARIOITEM 
                  SET cdLocalizacaoReal = ? , 
                      cdEstadoConserReal = ? , 
-                     cdSituacaoAtual = ? , 
-                     cdAlteracao = 3 
+                     cdSituacaoAtual = ? ,
+                     dsObservacao = ?, 
+                     cdAlteracao = CASE WHEN ? = '' THEN 3 ELSE 2 END 
                  WHERE nrPlaca = ? OR cdItem = ? AND cdInventario = ?`,
-                [cdLocalizacaoReal, cdEstadoConserReal, cdSituacaoAtual, placaInput, placaInput, invent],
+                [cdLocalizacaoReal, cdEstadoConserReal, cdSituacaoAtual, dsObservacao, dsObservacao, placaInput, placaInput, invent],
                 (_, result) => {
                     // Verifica se alguma linha foi afetada
                     if (result.rowsAffected > 0) {
@@ -738,6 +744,7 @@ export const getLocalizaSQLite = async (placa) => {
                       cdSituacaoAtual,
                       dsSituacao,
                       vlAtual,
+                      dsObservacao,
                       cdInventario,
                       CASE WHEN cdAlteracao IS NULL THEN '' ELSE 'BEM JÁ INVENTARIADO!' END AS StatusBem,
                       stInventario 

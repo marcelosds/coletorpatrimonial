@@ -31,12 +31,14 @@ const Leitura = () => {
   const [selectedLocalizacao, setSelectedLocalizacao] = useState(null); // Armazena o ID da localização
   const [selectedEstado, setSelectedEstado] = useState(null); // Armazena o ID da localização
   const [selectedSituacao, setSelectedSituacao] = useState(null); // Armazena o ID da localização
+  const [selectObservacao, setObservacao] = useState(''); // Armazena o ID da localização
   const [fields, setFields] = useState({
     placa: '',
     codigo: '',
     descricao: '',
     status: '',
     valor: '',
+    Observacao: '',
   });
 
   // Limpa as combobox
@@ -44,6 +46,7 @@ const Leitura = () => {
     setSelectedLocalizacao(null); 
     setSelectedEstado(null);
     setSelectedSituacao(null);
+    setObservacao('');
     
   };
 
@@ -277,11 +280,13 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
           descricao: bem.dsReduzida || '',
           status: bem.StatusBem || '',
           valor: bem.vlAtual || '',
+          Observacao: bem.dsObservacao || '',
         });
   
         setSelectedEstado(bem.cdEstadoConserReal);
         setSelectedLocalizacao(bem.cdLocalizacaoReal);
         setSelectedSituacao(bem.cdSituacaoAtual);
+        setObservacao(bem.dsObservacao);
 
       } else if (apiLink && codigoInventario) {
 
@@ -297,11 +302,13 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         descricao: bem.dsReduzida || '',
         status: bem.StatusBem || '',
         valor: bem.vlAtual || '',
+        Observacao: bem.dsObservacao || '',
       });
 
       setSelectedEstado(bem.cdEstadoConserReal);
       setSelectedLocalizacao(bem.cdLocalizacaoReal);
       setSelectedSituacao(bem.cdSituacaoAtual);
+      setObservacao(bem.dsObservacao);
       
     }
     } catch (error) {
@@ -435,11 +442,13 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
       const dados = {
         cdLocalizacaoReal: selectedLocalizacao, // Passa o ID da localização
         cdEstadoConserReal: selectedEstado, // Passa o ID da estado
-        cdSituacaoAtual: selectedSituacao // Passa o ID da situação
+        cdSituacaoAtual: selectedSituacao, // Passa o ID da situação
+        dsObservacao: selectObservacao
       };
 
+
       if (inventario.isEnabled) {
-        await atualizarInventario(selectedLocalizacao, selectedEstado, selectedSituacao, placaInput, invent);
+        await atualizarInventario(selectedLocalizacao, selectedEstado, selectedSituacao, selectObservacao, placaInput, invent);
         Alert.alert('Sucesso', 'Dados do bem salvos com sucesso.');
           
         // Limpar os campos após salvar
@@ -451,7 +460,8 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
           estado: '',
           situacao: '',
           status: '',
-          valor: ''
+          valor: '',
+          Observacao: '',
         });
         setScanned(false);
         handleAguardandoLeitura();
@@ -479,7 +489,8 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
           estado: '',
           situacao: '',
           status: '',
-          valor: ''
+          valor: '',
+          Observacao: '',
         });
         setScanned(false);
         handleAguardandoLeitura();
@@ -596,6 +607,13 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
           onChangeText={(value) => handleInputChange('valor', value)}
           editable={false}
         />
+        <TextInput
+            style={styles.input}
+            placeholder=" Informações Adicionais"
+            value={selectObservacao}
+            onChangeText={(value) => setObservacao(value)}
+            editable={true} // Define se o TextInput é editável
+          />
         
         <View style={styles.buttonContainer}>
           <View style={styles.button}>
@@ -654,7 +672,7 @@ const styles = StyleSheet.create({
   },
   scannerContainer: {
     flex: 1,         // Para ocupar espaço disponível
-    maxHeight: 150,  // Limitar a altura máxima
+    maxHeight: 110,  // Limitar a altura máxima
     minHeight: 10,  // Limitar a altura mínima
     marginBottom: 20,
   },
@@ -742,7 +760,7 @@ const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
     fontSize: 16,
     paddingHorizontal: 10,
-    borderColor: 'black',
+    borderColor: 'gray',
     borderRadius: 5,
     color: '#5f9ea0',
     marginBottom: 8,
@@ -752,8 +770,8 @@ const pickerSelectStyles = StyleSheet.create({
   inputAndroid: {
     fontSize: 16,
     paddingHorizontal: 10,
-    borderColor: 'black',
-    borderRadius: 5,
+    borderColor: 'gray',
+    borderRadius: 10,
     color: '#5f9ea0',
     marginBottom: 8,
     backgroundColor: '#fff',
