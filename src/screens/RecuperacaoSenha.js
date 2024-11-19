@@ -80,10 +80,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logo: {
-    width: 200,
+    width: 240,
     height: 200,
     marginBottom: 20,
-    borderRadius: 10
+    borderRadius: 10,
+    resizeMode: 'stretch',
   },
   input: {
     height: 40,

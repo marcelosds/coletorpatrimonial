@@ -71,6 +71,7 @@ const Leitura = () => {
 
   const [codigoUnidadeGestora, setCodigoUnidadeGestora] = useState('');
   const [apiLink, setApiLink] = useState('');
+  const [senhaLink, setSenhaLink] = useState('');
   const [codigoInventario, setCodigoInventario] = useState('');
 
   // Carrega os dados da configuração para o AsyncStorage
@@ -83,6 +84,7 @@ const Leitura = () => {
 
         if (inventario) {
           setApiLink(inventario.apiLink);
+          setSenhaLink(inventario.senhaLink);
           setCodigoInventario(inventario.codigoInventario.toString());
           setCodigoUnidadeGestora(inventario.codigoUnidadeGestora.toString());
 
@@ -130,7 +132,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
           
           setLocalizacoes(locaisFormatados);
           
-          } else if (apiLink && codigoUnidadeGestora) {
+          } else if (apiLink && senhaLink && codigoUnidadeGestora) {
 
           const token = await AsyncStorage.getItem('userToken');
        
@@ -153,7 +155,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
     }
   };
     carregaLocais();
-  }, [apiLink, codigoUnidadeGestora]);
+  }, [apiLink, senhaLink, codigoUnidadeGestora]);
 
   // Carrega as situações da base de dados informada nas configurações 
   useEffect(() => {
@@ -288,7 +290,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         setSelectedSituacao(bem.cdSituacaoAtual);
         setObservacao(bem.dsObservacao);
 
-      } else if (apiLink && codigoInventario) {
+      } else if (apiLink && senhaLink && codigoInventario) {
 
       const token = await AsyncStorage.getItem('userToken');
       
@@ -312,7 +314,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
       
     }
     } catch (error) {
-      Alert.alert('Atenção:', 'Bem não localizado, nesse inventário!');
+      Alert.alert('Atenção:', 'Bem não localizado nesse inventário!');
     } finally {
       setLoading(false);
       setBtnGravarDisabled(false);
@@ -335,7 +337,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         const bensFromSQLite = await getItemsFromSQLite(); // função para obter itens do SQLite
         setBensData(bensFromSQLite);
         
-      } else if (apiLink && codigoInventario) {
+      } else if (apiLink && senhaLink && codigoInventario) {
 
       const token = await AsyncStorage.getItem('userToken');
 
@@ -349,7 +351,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
     }
   };
   fetchBensData();
-  }, [apiLink, codigoInventario]);
+  }, [apiLink, senhaLink, codigoInventario]);
 
 
   // Função para localizar a placa ou código informado(a) na caixa de texto
@@ -372,7 +374,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
       setBtnGravarDisabled(false); // Ativa o botão após a ação
       destivaEditable();
     } else {
-      Alert.alert('Atenção:', 'Bem não localizado, nesse inventário!'); // Alerta se não encontrar
+      Alert.alert('Atenção:', 'Bem não localizado nesse inventário!'); // Alerta se não encontrar
     }
   };
 
@@ -397,7 +399,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
                 const situacaoInven = await getSituacaoInven(); // função para obter situação do inventário do SQLite
                 setStInventario(situacaoInven);
 
-              } else if (apiLink && codigoInventario) {
+              } else if (apiLink && senhaLink && codigoInventario) {
 
                 const token = await AsyncStorage.getItem('userToken');
 
@@ -416,7 +418,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
             
         };
     carrega(); // Chama a função para carregar os dados
-    }, [apiLink, codigoInventario])); // Executa uma vez na montagem do componente
+    }, [apiLink, senhaLink, codigoInventario])); // Executa uma vez na montagem do componente
 
 
   const salvar = async () => {
@@ -469,7 +471,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
         limparCampo();
         ativaEditable();
 
-      } else if (apiLink && codigoInventario) {
+      } else if (apiLink && senhaLink && codigoInventario) {
 
         const token = await AsyncStorage.getItem('userToken');
 

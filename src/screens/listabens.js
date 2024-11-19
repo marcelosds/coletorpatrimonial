@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,9 +18,10 @@ const Listabens = () => {
   const [error, setError] = useState(null); // Estado para erro
 
   const [apiLink, setApiLink] = useState('');
+  const [senhaLink, setSenhaLink] = useState('');
   const [codigoInventario, setCodigoInventario] = useState('');
 
- 
+
   // Carrega os dados da configuração para o AsyncStorage
   useFocusEffect(
     React.useCallback(() => {
@@ -31,6 +32,7 @@ const Listabens = () => {
 
         if (inventario) {
             setApiLink(inventario.apiLink);
+            setSenhaLink(inventario.senhaLink);
             setCodigoInventario(inventario.codigoInventario.toString());
 
         }    
@@ -52,7 +54,8 @@ const Listabens = () => {
               const json = await AsyncStorage.getItem('inventario');
               const inventario = JSON.parse(json);
 
-              // Verifica se está habilitado para carregar da API ou do SQLite
+             
+               // Verifica se está habilitado para carregar da API ou do SQLite
               if (inventario.isEnabled) {
                 // Carrega os bens da tabela INVENTARIOITEM do SQLite
                 const bensSQLite = await getItemsSQLite(); // função para obter itens do SQLite
@@ -68,8 +71,9 @@ const Listabens = () => {
                 setInventariados(inventariados.toString());
 
 
-              } else if (apiLink && codigoInventario) {
+              } else if (apiLink && senhaLink && codigoInventario) {
 
+                                  
                 const token = await AsyncStorage.getItem('userToken');
 
                 const response = await axios.get(`${apiLink}/bens/${codigoInventario}`, {
@@ -98,7 +102,8 @@ const Listabens = () => {
             }
                        
             setInventariados(inventariadosResponse.data.totalInventariados.toString()); // Garantindo que seja uma string
-                            }
+            }
+        
             } catch (error) {
             setError(error.message); // Armazena a mensagem de erro no estado
             } finally {
@@ -107,7 +112,7 @@ const Listabens = () => {
             
         };
     fetchBens(); // Chama a função para carregar os dados
-    }, [apiLink, codigoInventario])); // Executa uma vez na montagem do componente
+    }, [apiLink, senhaLink, codigoInventario])); // Executa uma vez na montagem do componente
 
   
   // Renderização da tela

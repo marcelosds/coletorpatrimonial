@@ -5,14 +5,17 @@ import Checkbox from 'expo-checkbox';
 import { createTable, handleLimpar, carregaData, syncDataWithServer } from '../database/baseSqlite';
 import axios from 'axios';
 
+
 const Configuracao = ( ) => {
   const [apiLink, setApiLink] = useState('');
+  const [senhaLink, setSenhaLink] = useState('');
   const [codigoInventario, setCodigoInventario] = useState('');
   const [codigoUnidadeGestora, setCodigoUnidadeGestora] = useState('');
   const [isEditable, setIsEditable] = useState(false); // Estado para controle de edição
   const [isEnabled, setIsEnabled] = useState(false); // Estado para controle de edição
   const [isEnabledSwitch, setIsEnabledSwitch] = useState(false); // Estado inicial do switch
-  
+
+
 
   const toggleSwitch = () => {
     setIsEnabledSwitch(previousState => !previousState); // Inverte o estado do switch
@@ -42,6 +45,7 @@ const Configuracao = ( ) => {
 
         if (inventario) {
           setApiLink(inventario.apiLink);
+          setSenhaLink(inventario.senhaLink);
           setCodigoInventario(inventario.codigoInventario.toString());
           setCodigoUnidadeGestora(inventario.codigoUnidadeGestora.toString());
           setIsEnabled(inventario.isEnabled); // Restaurar estado do checkbox
@@ -60,7 +64,7 @@ const Configuracao = ( ) => {
         const response = await axios.post(`${apiLink}/acesso`, { email });
         const tokenObtido = response.data.token;
         
-        console.log(tokenObtido); // Imprime o token
+        //console.log(tokenObtido); // Imprime o token
 
         // Salva o token no AsyncStorage
         await AsyncStorage.setItem('userToken', tokenObtido);
@@ -74,10 +78,16 @@ const Configuracao = ( ) => {
   // Função para gravar todos os dados no AsyncStorage os dados informados
   const Save = async () => {
     
-    if (apiLink && codigoInventario && codigoUnidadeGestora) {
+    if (apiLink && senhaLink && codigoInventario && codigoUnidadeGestora) {
+
+      const dispositivo = await axios.get(`${apiLink}/dispositivo`);
+      const disp = dispositivo.data;
+      
+      if (senhaLink === disp) {
 
       const inventario = {
         apiLink,
+        senhaLink,
         codigoInventario: parseInt(codigoInventario),
         codigoUnidadeGestora: parseInt(codigoUnidadeGestora),
         isEnabled
@@ -86,9 +96,10 @@ const Configuracao = ( ) => {
 
       await AsyncStorage.setItem('inventario', JSON.stringify(inventario));
 
-      //obterToken();
-
       Alert.alert('Sucesso', 'Configurações salvas.');
+    } else {
+      Alert.alert('Atenção:', 'Senha da API incorreta!');
+    }
 
       } else {
       Alert.alert('Erro', 'Preencha todos os campos!');
@@ -109,19 +120,28 @@ const Configuracao = ( ) => {
     
     <ScrollView style={styles.container}>
       <View style={styles.box1}>
-        <Text style={styles.title}>Endereço da API:</Text>
-        <TextInput
+        <Text style={styles.title}>Endereço e Senha da API:</Text>
+         <TextInput
           style={styles.input}
           placeholder="Endereço da API"
           value={apiLink}
           onChangeText={setApiLink}
-          editable={isEditable} /> 
+          editable={isEditable} />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Senha da API"
+          value={senhaLink}
+          onChangeText={setSenhaLink}
+          editable={isEditable}
+          secureTextEntry={true} // Isso garante que a senha apareça como asteriscos
+          />
           
         <View style={styles.check}>  
           <Checkbox
             value={isEditable}
             onValueChange={(newValue) => handleCheckboxChange(newValue)} />
-            <Text style={styles.textbox}>Alterar endereço da API?</Text>
+            <Text style={styles.textbox}>Alterar endereço e/ou senha da API?</Text>
         </View>
 
         <View style={styles.dados}>
@@ -225,7 +245,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     marginBottom: 1,
-    marginTop: 20,
   },
   title1: {
     fontSize: 16,

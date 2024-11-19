@@ -37,7 +37,7 @@ const Login = ({ navigation }) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
-      aspect: [4, 3],
+      //aspect: [4, 3],
       quality: 1,
     });
 
@@ -161,10 +161,11 @@ const styles = StyleSheet.create({
     marginBottom: 60
   },
   logo: {
-    width: 200,
+    width: 240,
     height: 200,
     marginBottom: 20,
-    borderRadius: 10
+    borderRadius: 10,
+    resizeMode: 'stretch',
   },
   buttonContainer: {
     marginTop: 50
