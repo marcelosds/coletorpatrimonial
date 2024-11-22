@@ -128,6 +128,7 @@ const Listabens = () => {
       <Text style={styles.text}>Situação: {item.dsSituacao}</Text>
       <Text style={styles.text}>Valor: {item.vlAtual}</Text>
       <Text style={styles.text}>Status: {item.StatusBem}</Text>
+      <Text style={styles.text}>Observações: {item.dsObservacao}</Text>
     </View>
   );
 

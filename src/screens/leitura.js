@@ -515,7 +515,6 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
     return <Text>Sem acesso a câmera!</Text>;
   }
 
-  
 
   
   return (

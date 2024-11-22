@@ -77,10 +77,14 @@ const Configuracao = ( ) => {
   
   // Função para gravar todos os dados no AsyncStorage os dados informados
   const Save = async () => {
+
+    const token = await AsyncStorage.getItem('userToken');
     
     if (apiLink && senhaLink && codigoInventario && codigoUnidadeGestora) {
 
-      const dispositivo = await axios.get(`${apiLink}/dispositivo`);
+      const dispositivo = await axios.get(`${apiLink}/dispositivo`, {
+        headers: { Authorization: token },
+      });
       const disp = dispositivo.data;
       
       if (senhaLink === disp) {
@@ -107,7 +111,7 @@ const Configuracao = ( ) => {
   };
 
 
-  // Gravar as cosnfigurações informadas
+  // Gravar as configurações informadas
   const Gravar = async () => {
 
       createTable(); //Cria tabela INVENTARIOITEM caso não exista
@@ -144,22 +148,26 @@ const Configuracao = ( ) => {
             <Text style={styles.textbox}>Alterar endereço e/ou senha da API?</Text>
         </View>
 
-        <View style={styles.dados}>
-          <Text style={styles.title1}>Nº Inventário:</Text>
-          <TextInput
-            style={styles.input1}
-            placeholder=""
-            value={codigoInventario}
-            keyboardType="numeric"
-            onChangeText={setCodigoInventario} />
-          <Text style={styles.title2}>Nº UG:</Text>
-          <TextInput
-            style={styles.input2}
-            placeholder=""
-            value={codigoUnidadeGestora}
-            keyboardType="numeric"
-            onChangeText={setCodigoUnidadeGestora} />
-            <Text></Text> 
+        <View style={styles.dadosprincipal}>
+          <View style={styles.dados1}>
+            <Text style={styles.title1}>Nº Inventário:</Text>
+            <TextInput
+              style={styles.input1}
+              placeholder=""
+              value={codigoInventario}
+              keyboardType="numeric"
+              onChangeText={setCodigoInventario} />
+          </View>
+          <View style={styles.dados2}>
+            <Text style={styles.title2}>Nº UG:</Text>
+            <TextInput
+              style={styles.input2}
+              placeholder=""
+              value={codigoUnidadeGestora}
+              keyboardType="numeric"
+              onChangeText={setCodigoUnidadeGestora} />
+              <Text></Text>
+          </View> 
         </View>
         <View style={styles.check}>  
             <Checkbox
@@ -253,7 +261,7 @@ const styles = StyleSheet.create({
   title2: {
     fontSize: 16,
     marginTop: 10,
-    paddingStart: 75
+    //paddingStart: 75
   },
   input: {
     height: 40,
@@ -301,9 +309,16 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
     paddingBottom: 10
   },
-  dados: {
+  dadosprincipal: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    justifyContent: 'space-between',
+  
+  },
+  dados1: {
+    flexDirection: 'row',
+  },
+  dados2: {
+    flexDirection: 'row',
     marginBottom: 20
   },
   textbox: {

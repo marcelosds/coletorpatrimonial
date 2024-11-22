@@ -503,7 +503,8 @@ export const getItemsSQLite = async () => {
                   E.dsEstadoConser as dsEstadoConser,
                   S.dsSituacao AS dsSituacao,
                   I.vlAtual,
-                  CASE WHEN I.cdAlteracao IS NULL THEN '' ELSE 'BEM JÁ INVENTARIADO!' END AS StatusBem
+                  CASE WHEN I.cdAlteracao IS NULL THEN '' ELSE 'BEM JÁ INVENTARIADO!' END AS StatusBem,
+                  I.dsObservacao
            FROM INVENTARIOITEM I
            INNER JOIN LOCALIZACAO L ON I.cdLocalizacaoReal = L.cdLocalReduzido
            INNER JOIN SITUACAO S ON I.cdSituacaoAtual = S.cdSituacaoReduzido
