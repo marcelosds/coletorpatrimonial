@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +16,7 @@ const Listabens = () => {
   const [stInventario, setStInventario] = useState(null); // Adicionado para armazenar stInventario
   const [loading, setLoading] = useState(true); // Estado para controle de carregamento
   const [error, setError] = useState(null); // Estado para erro
+  const [isRefresh, setIsRefresh] = useState(false);
 
   const [apiLink, setApiLink] = useState('');
   const [senhaLink, setSenhaLink] = useState('');
@@ -38,83 +39,83 @@ const Listabens = () => {
         }    
     }
     loadData(); // Chama a função para carregar os dados
-  
     }, [])); // Executa uma vez na montagem do componente
 
 
   
   // Função para buscar os bens
-  useFocusEffect(
-    React.useCallback(() => {
-        const fetchBens = async () => {
-          setLoading(true); // Define o carregamento como verdadeiro
-          setError(null); // Reseta o erro antes da nova requisição
-            try {
+  const fetchBens = async () => {
+    setIsRefresh(true);
+    setLoading(true); // Define o carregamento como verdadeiro
+    setError(null); // Reseta o erro antes da nova requisição
+      try {
 
-              const json = await AsyncStorage.getItem('inventario');
-              const inventario = JSON.parse(json);
+        const json = await AsyncStorage.getItem('inventario');
+        const inventario = JSON.parse(json);
 
-             
-               // Verifica se está habilitado para carregar da API ou do SQLite
-              if (inventario.isEnabled) {
-                // Carrega os bens da tabela INVENTARIOITEM do SQLite
-                const bensSQLite = await getItemsSQLite(); // função para obter itens do SQLite
-                setBens(bensSQLite);
-                  
-                const situacaoInven = await getSituacaoInven(); // função para obter situação do inventário do SQLite
-                setStInventario(situacaoInven);
-                
-                const totalItens = await getTotalItensInven(); // função para obter totais de bens do SQLite
-                setTotal(totalItens.toString());
-                
-                const inventariados = await getInventariados(); // função para obter itens inventariados do SQLite
-                setInventariados(inventariados.toString());
-
-
-              } else if (apiLink && senhaLink && codigoInventario) {
-
-                                  
-                const token = await AsyncStorage.getItem('userToken');
-
-                const response = await axios.get(`${apiLink}/bens/${codigoInventario}`, {
-                    headers: { Authorization: token },
-                  }); // Endpoint da API
-
-                const totalResponse = await axios.get(`${apiLink}/total/${codigoInventario}`, {
-                  headers: { Authorization: token },
-                }); // Endpoint da API
-
-                const inventariadosResponse = await axios.get(`${apiLink}/inventariados/${codigoInventario}`, {
-                  headers: { Authorization: token },
-                }); // Endpoint da API
-
-                const InventarioResponse = await axios.get(`${apiLink}/inventario/${codigoInventario}`, {
-                  headers: { Authorization: token },
-                }); // Endpoint da API
-
-            setBens(response.data); // Armazena os dados no estado
-                
-
-            setStInventario(InventarioResponse.data.stInventario); // Armazena os dados no estado
-                      
-            if (totalResponse.data && totalResponse.data.totalBens) {
-              setTotal(totalResponse.data.totalBens.toString()); // Garantindo que seja uma string
-            }
-                       
-            setInventariados(inventariadosResponse.data.totalInventariados.toString()); // Garantindo que seja uma string
-            }
         
-            } catch (error) {
-            setError(error.message); // Armazena a mensagem de erro no estado
-            } finally {
-            setLoading(false); // Define o carregamento como concluído
-            }
+          // Verifica se está habilitado para carregar da API ou do SQLite
+        if (inventario.isEnabled) {
+          // Carrega os bens da tabela INVENTARIOITEM do SQLite
+          const bensSQLite = await getItemsSQLite(); // função para obter itens do SQLite
+          setBens(bensSQLite);
             
-        };
-    fetchBens(); // Chama a função para carregar os dados
-    }, [apiLink, senhaLink, codigoInventario])); // Executa uma vez na montagem do componente
+          const situacaoInven = await getSituacaoInven(); // função para obter situação do inventário do SQLite
+          setStInventario(situacaoInven);
+          
+          const totalItens = await getTotalItensInven(); // função para obter totais de bens do SQLite
+          setTotal(totalItens.toString());
+          
+          const inventariados = await getInventariados(); // função para obter itens inventariados do SQLite
+          setInventariados(inventariados.toString());
 
+
+        } else if (apiLink && senhaLink && codigoInventario) {
+
+                            
+          const token = await AsyncStorage.getItem('userToken');
+
+          const response = await axios.get(`${apiLink}/bens/${codigoInventario}`, {
+              headers: { Authorization: token },
+            }); // Endpoint da API
+
+          const totalResponse = await axios.get(`${apiLink}/total/${codigoInventario}`, {
+            headers: { Authorization: token },
+          }); // Endpoint da API
+
+          const inventariadosResponse = await axios.get(`${apiLink}/inventariados/${codigoInventario}`, {
+            headers: { Authorization: token },
+          }); // Endpoint da API
+
+          const InventarioResponse = await axios.get(`${apiLink}/inventario/${codigoInventario}`, {
+            headers: { Authorization: token },
+          }); // Endpoint da API
+
+      setBens(response.data); // Armazena os dados no estado
+          
+
+      setStInventario(InventarioResponse.data.stInventario); // Armazena os dados no estado
+                
+      if (totalResponse.data && totalResponse.data.totalBens) {
+        setTotal(totalResponse.data.totalBens.toString()); // Garantindo que seja uma string
+      }
+                  
+      setInventariados(inventariadosResponse.data.totalInventariados.toString()); // Garantindo que seja uma string
+      }
   
+      } catch (error) {
+      setError(error.message); // Armazena a mensagem de erro no estado
+      } finally {
+      setLoading(false); // Define o carregamento como concluído
+      }
+      setIsRefresh(false);
+  };
+
+
+  useEffect(() => {
+    fetchBens(); // Chama a função ao montar o componente ou ao atualizar
+  }, [apiLink, senhaLink, codigoInventario]);
+ 
   // Renderização da tela
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
@@ -158,6 +159,7 @@ const Listabens = () => {
             data={bens}
             renderItem={renderItem}
             keyExtractor={item => item.cdItem.toString()} // Certifique-se de que cdItem pode ser convertido para string
+            refreshControl={<RefreshControl refreshing={isRefresh} onRefresh={fetchBens}/>}
           />
         </>
       )}

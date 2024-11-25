@@ -165,10 +165,7 @@ const Sair = ({ navigation }) => {
     };
 
     const handleLogout = async () => {
-      // Aqui você pode adicionar lógica para efetuar o logout,
-      //const auth = getAuth();
       try {
-        //await signOut(auth);
         Alert.alert('Logout', 'Você foi desconectado com sucesso!');
         navigation.navigate('Login'); // Navegue para a tela de login
         // Redirecionar ou atualizar o estado se necessário
