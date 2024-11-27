@@ -636,14 +636,14 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
                   status: ''
                 });
               }}
-              color="#5f9ea0"
+              color="#4682b4"
             />
             </View>
             <View style={styles.button}>
               <Button 
               title="Localizar" 
               onPress={handleLocalizar}  
-              color="#5f9ea0" 
+              color="#4682b4" 
               disabled={isBtnLimparDisabled} // Desativa o botão se isButtonDisabled for true
               />
             </View>
@@ -651,7 +651,7 @@ Unidade Gestora: ${inventario.codigoUnidadeGestora.toString()} - ${unidadeGestor
               <Button 
               title="Gravar" 
               onPress={() => {salvar(); setBtnLimparDisabled(false)}}  
-              color="#5f9ea0"
+              color="#4682b4"
               disabled={isBtnGravarDisabled} // Desativa o botão se isButtonDisabled for true 
               
               />
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 10,
     fontSize: 16,
-    color: '#5f9ea0',
+    color: '#808080',
     backgroundColor: '#fff',
     textAlign: 'left',
   },
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 10,
     fontSize: 16,
-    color: '#5f9ea0',
+    color: '#808080',
     backgroundColor: '#fff',
     textAlign: 'left',
   },
@@ -739,6 +739,7 @@ const styles = StyleSheet.create({
   button: {
     flex: 1, // Faz com que cada botão ocupe a mesma largura
     marginHorizontal: 5, // Adiciona um pequeno espaço entre os botões
+  
   },
   text: {
     fontSize: 24,
@@ -763,7 +764,7 @@ const pickerSelectStyles = StyleSheet.create({
     paddingHorizontal: 10,
     borderColor: 'gray',
     borderRadius: 5,
-    color: '#5f9ea0',
+    color: '#808080',
     marginBottom: 8,
     backgroundColor: '#fff',
     textAlign: 'left'
@@ -773,7 +774,7 @@ const pickerSelectStyles = StyleSheet.create({
     paddingHorizontal: 10,
     borderColor: 'gray',
     borderRadius: 10,
-    color: '#5f9ea0',
+    color: '#808080',
     marginBottom: 8,
     backgroundColor: '#fff',
     textAlign: 'left'

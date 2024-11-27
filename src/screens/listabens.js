@@ -78,7 +78,7 @@ const Listabens = () => {
           const response = await axios.get(`${apiLink}/bens/${codigoInventario}`, {
               headers: { Authorization: token },
             }); // Endpoint da API
-
+      
           const totalResponse = await axios.get(`${apiLink}/total/${codigoInventario}`, {
             headers: { Authorization: token },
           }); // Endpoint da API
@@ -92,7 +92,6 @@ const Listabens = () => {
           }); // Endpoint da API
 
       setBens(response.data); // Armazena os dados no estado
-          
 
       setStInventario(InventarioResponse.data.stInventario); // Armazena os dados no estado
                 
@@ -112,9 +111,10 @@ const Listabens = () => {
   };
 
 
-  useEffect(() => {
-    fetchBens(); // Chama a função ao montar o componente ou ao atualizar
-  }, [apiLink, senhaLink, codigoInventario]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBens(); // Chama a função ao montar o componente ou ao atualizar
+  }, [apiLink, senhaLink, codigoInventario]));
  
   // Renderização da tela
   const renderItem = ({ item }) => (
@@ -141,14 +141,14 @@ const Listabens = () => {
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : error ? (
-        <Text>Erro ao carregar dados: Verificar conexão com servidor, estiver trabalhando offline, verifique importação.</Text>
+        <Text>Erro ao carregar dados: Verificar conexão com servidor, se estiver trabalhando offline, verifique importação.</Text>
       ) : (
         <>
-          <Text style={[styles.title, { color: stInventario === 1 ? 'red' : '#5f9ea0' }]}>
+          <Text style={[styles.title, { color: stInventario === 1 ? 'red' : '#4682b4' }]}>
             Inventário: {codigoInventario}
           </Text>
           {stInventario === 1 && (  // Verifica se stInventario é 2 para exibir o texto
-          <Text style={[styles.title, { color: stInventario === 1 ? 'red' : '#5f9ea0' }]}>Encerrado!</Text>
+          <Text style={[styles.title, { color: stInventario === 1 ? 'red' : '#4682b4' }]}>Encerrado!</Text>
           )}
 
           <View style={styles.subtext}>
@@ -178,15 +178,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
-    textAlign: 'center',
-    color: '#5f9ea0'
-  },
-  title1: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-    color: 'red'
+    textAlign: 'center'
   },
   subtext: {
     flexDirection: 'row',
@@ -198,10 +190,12 @@ const styles = StyleSheet.create({
   title1: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: "#484d50"
   },
   title2: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: "#484d50"
   },
   itemContainer: {
     padding: 15,
@@ -213,7 +207,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    color: '#5f9ea0',
+    color: '#4682b4',
   },
   lista: {
     flexDirection: 'row',

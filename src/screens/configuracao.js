@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
 import { createTable, handleLimpar, carregaData, syncDataWithServer } from '../database/baseSqlite';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 
 const Configuracao = ( ) => {
@@ -14,6 +15,12 @@ const Configuracao = ( ) => {
   const [isEditable, setIsEditable] = useState(false); // Estado para controle de edição
   const [isEnabled, setIsEnabled] = useState(false); // Estado para controle de edição
   const [isEnabledSwitch, setIsEnabledSwitch] = useState(false); // Estado inicial do switch
+
+  const navigation = useNavigation();
+
+  const handleNavigateToInventarios = () => {
+    navigation.navigate('Inventarios'); // Nome da nova screen
+  };
 
 
 
@@ -63,8 +70,6 @@ const Configuracao = ( ) => {
     try {
         const response = await axios.post(`${apiLink}/acesso`, { email });
         const tokenObtido = response.data.token;
-        
-        //console.log(tokenObtido); // Imprime o token
 
         // Salva o token no AsyncStorage
         await AsyncStorage.setItem('userToken', tokenObtido);
@@ -115,9 +120,12 @@ const Configuracao = ( ) => {
   const Gravar = async () => {
 
       createTable(); //Cria tabela INVENTARIOITEM caso não exista
-      Save();
-      obterToken();
+      obterToken(); // Aguarda a conclusão da obtenção do token 
+      setTimeout(() => {
+        Save(); // Executa Save após 5 segundos
+    }, 3000); // Tempo em milissegundos (5000 ms = 5 segundos)
    };
+
 
 
   return (
@@ -141,10 +149,11 @@ const Configuracao = ( ) => {
           secureTextEntry={true} // Isso garante que a senha apareça como asteriscos
           />
           
-        <View style={styles.check}>  
+        <View style={styles.check1}>  
           <Checkbox
             value={isEditable}
-            onValueChange={(newValue) => handleCheckboxChange(newValue)} />
+            onValueChange={(newValue) => handleCheckboxChange(newValue)}
+            />
             <Text style={styles.textbox}>Alterar endereço e/ou senha da API?</Text>
         </View>
 
@@ -166,22 +175,23 @@ const Configuracao = ( ) => {
               value={codigoUnidadeGestora}
               keyboardType="numeric"
               onChangeText={setCodigoUnidadeGestora} />
-              <Text></Text>
           </View> 
         </View>
-        <View style={styles.check}>  
+        <View style={styles.check2}>  
             <Checkbox
               value={isEnabled}
-              onValueChange={handleCheckboxChange1} />
+              onValueChange={handleCheckboxChange1}
+            />
               <Text style={styles.textbox}>Trabalhar Offline</Text>
-          </View>
+        </View>
         <Button 
           title="GRAVAR" 
           style={styles.button}
           onPress={Gravar} 
-          color="#5f9ea0"
+          color="#4682b4"
         />
         <Text></Text>
+        <Button title="Ver Inventários" color="#4682b4" onPress={handleNavigateToInventarios} />
         </View>
         <Text></Text>
         <View style={styles.box2}>
@@ -189,7 +199,7 @@ const Configuracao = ( ) => {
             <Text style={styles.textbox}>Sincronizar Informações? </Text>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }} // Cor da trilha do switch
-              thumbColor={isEnabledSwitch ? "#20b2aa" : "#f4f3f4"} // Cor do botão do switch
+              thumbColor={isEnabledSwitch ? "#4682b4" : "#f4f3f4"} // Cor do botão do switch
               ios_backgroundColor="#3e3e3e"
               onValueChange={toggleSwitch} // Chama a função para alternar o estado
               value={isEnabledSwitch} // valor atual do switch
@@ -200,7 +210,7 @@ const Configuracao = ( ) => {
             title="Importar Inventário" 
             style={styles.button} 
             onPress={carregaData} 
-            color="#5f9ea0" 
+            color="#4682b4" 
             disabled={!isEnabledSwitch}  
           />
           <Text></Text>
@@ -208,19 +218,18 @@ const Configuracao = ( ) => {
             title="Exportar Inventário" 
             style={styles.button} 
             onPress={syncDataWithServer} 
-            color="#5f9ea0" 
+            color="#4682b4" 
             disabled={!isEnabledSwitch}  
           />
           <Text></Text>
         </View>
-        <Text></Text>
         <Text></Text>
         <View style={styles.box2}>
         <Button 
             title="Limpar Dados do Coletor" 
             style={styles.button} 
             onPress={handleLimpar} 
-            color="#5f9ea0"
+            color="#4682b4"
             disabled={!isEnabledSwitch}  
           />
         </View>
@@ -253,15 +262,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     marginBottom: 1,
+    color: '#484d50',
+    
   },
   title1: {
     fontSize: 16,
-    marginTop: 10
+    marginTop: 10,
+    color: '#484d50'
   },
   title2: {
     fontSize: 16,
     marginTop: 10,
-    //paddingStart: 75
+    color: '#484d50'
   },
   input: {
     height: 40,
@@ -269,7 +281,8 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     marginBottom: 10,
     paddingHorizontal: 10,
-    backgroundColor: '#f8f8ff'
+    backgroundColor: '#f8f8ff',
+    color: '#808080'
   },
   input1: {
     height: 40,
@@ -280,7 +293,8 @@ const styles = StyleSheet.create({
     marginStart: 5,
     width: 60,
     textAlign: 'center',
-    backgroundColor: '#f8f8ff'
+    backgroundColor: '#f8f8ff',
+    color:'#808080'
   },
   input2: {
     height: 40,
@@ -291,14 +305,20 @@ const styles = StyleSheet.create({
     marginStart: 5,
     width: 60,
     textAlign: 'center',
-    backgroundColor: '#f8f8ff'
+    backgroundColor: '#f8f8ff',
+    color:'#808080'
   },
   button: {
     flex: 1,
     padding: 20,
     backgroundColor: '#f0f0f0'
   },
-  check: {
+  check1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  check2: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20
@@ -319,7 +339,7 @@ const styles = StyleSheet.create({
   },
   dados2: {
     flexDirection: 'row',
-    marginBottom: 20
+    marginBottom: 10
   },
   textbox: {
     marginStart: 8,
@@ -328,5 +348,4 @@ const styles = StyleSheet.create({
   
 });
 
-// Exporta o componente para uso em outras partes do aplicativo
 export default Configuracao;

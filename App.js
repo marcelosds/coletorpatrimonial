@@ -8,6 +8,7 @@ import Configuracao from './src/screens/configuracao';
 import Principal from './src/screens/principal';
 import RecuperacaoSenha from './src/screens/RecuperacaoSenha';
 import Listabens from './src/screens/listabens';
+import Inventarios from './src/screens/inventarios';
 
 
 const Stack = createNativeStackNavigator();
@@ -50,7 +51,12 @@ const App = () => {
         <Stack.Screen 
           name="Lista" 
           component={Listabens}
-          options={{ headerShown: false }} />    
+          options={{ headerShown: false }} />
+
+        <Stack.Screen 
+          name="Inventarios" 
+          component={Inventarios}
+          options={{ headerShown: false }} />      
       </Stack.Navigator>
     </NavigationContainer>
   );

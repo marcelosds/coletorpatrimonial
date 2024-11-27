@@ -199,7 +199,7 @@ const Sair = ({ navigation }) => {
       <View style={styles.container}>
         <Text>Você será desconectado!</Text>
         <Text></Text>
-        <Button title="Tem certeza que deseja sair?" onPress={handleLogout} color="#5f9ea0" />
+        <Button title="Tem certeza que deseja sair?" onPress={handleLogout} color="#4682b4" />
       </View>
       <View style={{ padding: 20 }}>
       
@@ -224,7 +224,7 @@ const Sair = ({ navigation }) => {
         />
         <Button 
           title="Excluir Minha Conta"
-          onPress={excluirConta} color="#5f9ea0" // Chama a função de exclusão quando pressionado
+          onPress={excluirConta} color="#4682b4" // Chama a função de exclusão quando pressionado
           disabled={!isChecked} // Desativa o botão se a Checkbox não estiver marcada
         />
       </View>
@@ -261,6 +261,7 @@ const styles = StyleSheet.create({
       marginBottom: 10,
       paddingHorizontal: 10,
       borderRadius: 5,
+      color:'#808080'
     },
   });
 

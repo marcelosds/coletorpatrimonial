@@ -71,7 +71,7 @@ const Login = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.header}>
       {!logoUri ? (
-        <Button title="Clique aqui para carregar imagem logomarca" onPress={pickImage} />
+        <Button title="Clique aqui para carregar imagem logomarca" onPress={pickImage} color="#4682b4" />
       ) : (
         <Image/>
       )}
@@ -111,7 +111,7 @@ const Login = ({ navigation }) => {
       </View>
 
       <View style={styles.buttonContainer}>
-        <Button title="Login" onPress={handleAuth} color="#5f9ea0" />
+        <Button title="Login" onPress={handleAuth} color="#4682b4" />
         <Text 
           style={styles.link} 
           onPress={() => navigation.navigate('Cadastro')} // Navegar para Cadastro
@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 20,
     textAlign: 'center',
+    color:"#484d50"
   },
   input: {
     height: 40,
@@ -144,15 +145,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
     backgroundColor: '#fff',
+    color:'#808080'
   },
   link: {
     marginTop: 20,
-    color: '#5f9ea0',
+    color: '#4682b4',
     textAlign: 'center',
   },
   link1: {
     marginTop: 1,
-    color: '#5f9ea0',
+    color: '#4682b4',
     textAlign: 'right',
   },
   header: {

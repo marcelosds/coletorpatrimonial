@@ -111,6 +111,22 @@ export const createTable = () => {
         console.error("Erro ao criar tabela: ", error);
       }
     );
+    tx.executeSql(
+      `CREATE TABLE IF NOT EXISTS INVENTARIOS (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cdInventario INTEGER,
+        dsInventario TEXT,
+        dtInicio TEXT,
+        cdComissao TEXT       
+      )`,
+      [],
+      () => {
+        console.log("Tabela INVENTARIOS criada com sucesso!");
+      },
+      error => {
+        console.error("Erro ao criar tabela: ", error);
+      }
+    );
   });
 };
 
@@ -189,6 +205,7 @@ export const createTables = () => {
         console.error("Erro ao criar tabela: ", error);
       }
     );
+   
   });
 };
 
@@ -231,6 +248,32 @@ export const excluirTabela = () => {
         console.error("Erro ao criar tabela: ", error);
       }
     );
+    tx.executeSql(
+      `DROP TABLE IF EXISTS INVENTARIOS`,
+      [],
+      () => {
+        console.log("Tabela INVENTARIOS excluída (se existia).");
+      },
+      error => {
+        console.error("Erro ao excluir tabela: ", error);
+      }
+    );
+    tx.executeSql(
+      `CREATE TABLE IF NOT EXISTS INVENTARIOS (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cdInventario INTEGER,
+        dsInventario TEXT,
+        dtInicio TEXT,
+        cdComissao TEXT       
+      )`,
+      [],
+      () => {
+        console.log("Tabela INVENTARIOS criada com sucesso!");
+      },
+      error => {
+        console.error("Erro ao criar tabela: ", error);
+      }
+    );
   });
 };
 
@@ -265,7 +308,12 @@ export const carregaData = async () => {
 
         const estado = await axios.get(`${api}/estado`, {
           headers: { Authorization: token },
-        });  
+        });
+        
+        
+        const inventarios = await axios.get(`${api}/inventarios`, {
+          headers: { Authorization: token },
+        });
 
 
         importDataToSQLite(response.data); // Importa os dados para o SQLite após definir bens
@@ -275,6 +323,8 @@ export const carregaData = async () => {
         importSituacao(situacao.data);
 
         importEstado(estado.data);
+
+        importInventarios(inventarios.data);
 
     }  
     
@@ -403,6 +453,33 @@ const importEstado = (estado) => {
     //Alert.alert('Informação:', 'Situações importadas para o Coletor com sucesso!')
   });
 }; 
+
+
+//Carregar Inventários Ativos do servidor no dispositivo - SQLite
+const importInventarios = (inventarios) => {
+  db.transaction(tx => {
+    inventarios.forEach(item => {
+      tx.executeSql(
+        `INSERT INTO INVENTARIOS (cdInventario, dsInventario, dtInicio, cdComissao)
+        VALUES (?, ?, ?, ?)`,
+        [
+          item.cdInventario,
+          item.dsInventario,
+          item.dtInicio,
+          item.cdComissao,
+        ],
+        () => {
+
+        },
+        error => {
+          console.error("Erro ao importar inventários: ", error);
+        }
+      );
+    });
+    //Alert.alert('Informação:', 'Inventários importados para o Coletor com sucesso!')
+  });
+};
+
 
 // Enviar atualizações do SQlite local para o servidor
 export const syncDataWithServer = async () => {
@@ -874,6 +951,34 @@ export const deleteUserById = async (userId) => {
       });
   });
 };  
+
+// Buscar invetários da base sqlite do dispositivo
+export const getInventarios = () => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      // Realiza a consulta SQL para obter os campos desejados
+      tx.executeSql(
+        `SELECT cdInventario, dsInventario, dtInicio, cdComissao FROM INVENTARIOS`,
+        [],
+        (_, { rows }) => {
+          const inventarioArray = [];
+          
+          // Transforma as linhas obtidas em um array
+          for (let i = 0; i < rows.length; i++) {
+            const { cdInventario, dsInventario, dtInicio, cdComissao } = rows.item(i);
+            inventarioArray.push({ cdInventario, dsInventario, dtInicio, cdComissao }); // Adiciona ao array
+          }
+
+          resolve(inventarioArray); // Resolva a promessa com o array de estados de conservação
+        },
+        (_, error) => {
+          console.error("Erro ao extrair dados:", error);
+          reject(error); // Rejeita a promessa em caso de erro
+        }
+      );
+    });
+  });
+};
 
 
 
