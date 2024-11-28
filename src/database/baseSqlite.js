@@ -117,7 +117,7 @@ export const createTable = () => {
         cdInventario INTEGER,
         dsInventario TEXT,
         dtInicio TEXT,
-        cdComissao TEXT       
+        cdComissao INTEGER       
       )`,
       [],
       () => {
@@ -264,7 +264,7 @@ export const excluirTabela = () => {
         cdInventario INTEGER,
         dsInventario TEXT,
         dtInicio TEXT,
-        cdComissao TEXT       
+        cdComissao INTEGER       
       )`,
       [],
       () => {
@@ -958,7 +958,17 @@ export const getInventarios = () => {
     db.transaction(tx => {
       // Realiza a consulta SQL para obter os campos desejados
       tx.executeSql(
-        `SELECT cdInventario, dsInventario, dtInicio, cdComissao FROM INVENTARIOS`,
+        `SELECT 
+            I.cdInventario, 
+            I.dsInventario, 
+            I.dtInicio, 
+            I.cdComissao 
+        FROM 
+            INVENTARIOS AS I
+        INNER JOIN 
+            INVENTARIOITEM AS II ON I.cdInventario = II.cdInventario
+        GROUP BY 
+            I.cdInventario`,
         [],
         (_, { rows }) => {
           const inventarioArray = [];

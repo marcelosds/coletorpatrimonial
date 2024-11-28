@@ -54,6 +54,12 @@ const Login = ({ navigation }) => {
   }, []);
 
   const handleAuth = async () => {
+      // Verifica se os campos estão vazios
+      if (!email || !password) {
+        Alert.alert('Atenção:', 'Por favor, preencha todos os campos.');
+        return; // Impede a execução da autenticação se algum campo estiver vazio
+      }
+
       // Verifica as credenciais do usuário
       const user = await authenticateUser(email, password);
       

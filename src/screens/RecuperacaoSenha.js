@@ -23,9 +23,16 @@ const RecuperarSenha = ({ navigation }) => {
 
 
   const handleRecuperarSenha = async () => {
+
+    // Verifica se os campos estão vazios
+    if (!email || !novaSenha) {
+      Alert.alert('Atenção:', 'Por favor, preencha todos os campos.');
+      return; // Interrompe a execução se algum campo estiver vazio
+    }
+
     try {
       const mensagem = await recuperarSenha(email, novaSenha);
-      Alert.alert('Sucesso', mensagem);
+      Alert.alert('Atenção:', mensagem);
       navigation.navigate('Login'); // Navegue para a tela de login
     } catch (error) {
       Alert.alert('Erro', error);

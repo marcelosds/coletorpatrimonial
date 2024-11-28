@@ -83,6 +83,26 @@ const Configuracao = ( ) => {
   // Função para gravar todos os dados no AsyncStorage os dados informados
   const Save = async () => {
 
+    const json = await AsyncStorage.getItem('inventario');
+    const inventario = JSON.parse(json);
+
+    if (inventario.isEnabled) {
+
+      const inventario = {
+        apiLink,
+        senhaLink,
+        codigoInventario: parseInt(codigoInventario),
+        codigoUnidadeGestora: parseInt(codigoUnidadeGestora),
+        isEnabled
+
+      };
+
+      await AsyncStorage.setItem('inventario', JSON.stringify(inventario));
+
+      Alert.alert('Sucesso', 'Configurações salvas.');
+
+    } else {
+
     const token = await AsyncStorage.getItem('userToken');
     
     if (apiLink && senhaLink && codigoInventario && codigoUnidadeGestora) {
@@ -113,17 +133,26 @@ const Configuracao = ( ) => {
       } else {
       Alert.alert('Erro', 'Preencha todos os campos!');
     }
+  }
   };
 
 
   // Gravar as configurações informadas
   const Gravar = async () => {
 
+    const json = await AsyncStorage.getItem('inventario');
+    const inventario = JSON.parse(json);
+
+    if (inventario.isEnabled) {
+      createTable(); //Cria tabela INVENTARIOITEM caso não exista
+      Save(); // Executa Save após 5 segundos
+    } else {
       createTable(); //Cria tabela INVENTARIOITEM caso não exista
       obterToken(); // Aguarda a conclusão da obtenção do token 
       setTimeout(() => {
         Save(); // Executa Save após 5 segundos
     }, 3000); // Tempo em milissegundos (5000 ms = 5 segundos)
+  }
    };
 
 

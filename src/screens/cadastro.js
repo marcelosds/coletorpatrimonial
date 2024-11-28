@@ -24,7 +24,7 @@ const Cadastro = ({ navigation }) => {
 
   const handleCadastro = async () => {
     if (!fullName || !email || !password) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos!');
+      Alert.alert('Atenção:', 'Por favor, preencha todos os campos!');
       return;
     }
 
