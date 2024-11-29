@@ -481,21 +481,9 @@ const importInventarios = (inventarios) => {
 };
 
 
-export const syncDataWithServer = async () => {
-
-  const situacaoInven = await getSituacaoInven(); // função para obter situação do inventário do SQLite
-
-  // Verifica se situacaoInven é diferente de 1
-  if (situacaoInven !== 1) {
-    syncWithServer();
-  } else {
-    Alert.alert('Atenção:', 'Este inventário encontra-se encerrado!')
-  }
-};
-
 
 // Enviar atualizações do SQlite local para o servidor
-export const syncWithServer = async () => {
+export const syncDataWithServer = async () => {
   
   const json = await AsyncStorage.getItem('inventario');
   const inventario = JSON.parse(json);
@@ -527,15 +515,25 @@ export const syncWithServer = async () => {
           // Aqui a lógica para verificar se a API está online
           if (inventario) {
               const api = (inventario.apiLink);
-              const codigo = (inventario.codigoInventario);
+              const codigo = (inventario.codigoInventario.toString());
               const token = await AsyncStorage.getItem('userToken');
               
               try {
+                  const situacaoInven = await axios.get(`${api}/inventario/${codigo}`, {
+                    headers: { Authorization: token },
+                  }); // Endpoint da API
+
+                  // Verifica se situacaoInven é diferente de 1
+                  if (situacaoInven.data.stInventario !== 1) {
+
                   // Envia os dados para o servidor
                   await axios.put(`${api}/base/${codigo}`, dadosParaEnviar, {
                     headers: { Authorization: token },
                   });
                   Alert.alert('Informação:', 'Inventários atualizados no servidor com sucesso!')
+                 } else {
+                    Alert.alert('Atenção:', 'Este inventário encontra-se encerrado!')
+                 } 
               } catch (error) {
                 Alert.alert('Atenção', 'Erro ao sincronizar itens, tente novamente!')
               }
