@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite/legacy';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
-
+import { useState } from 'react';
 
 
 // Configuração do banco de dados
@@ -66,7 +66,7 @@ export const authenticateUser = (email, password) => {
 export const handleLimpar = () => {
   Alert.alert(
     "Confirmação?",
-    "Você tem certeza que deseja limpar base de dados do coletor?",
+    "Você tem certeza que deseja excluir toda a base de dados do coletor?",
     [
       {
         text: "Cancelar",
@@ -481,9 +481,22 @@ const importInventarios = (inventarios) => {
 };
 
 
-// Enviar atualizações do SQlite local para o servidor
 export const syncDataWithServer = async () => {
 
+  const situacaoInven = await getSituacaoInven(); // função para obter situação do inventário do SQLite
+
+  // Verifica se situacaoInven é diferente de 1
+  if (situacaoInven !== 1) {
+    syncWithServer();
+  } else {
+    Alert.alert('Atenção:', 'Este inventário encontra-se encerrado!')
+  }
+};
+
+
+// Enviar atualizações do SQlite local para o servidor
+export const syncWithServer = async () => {
+  
   const json = await AsyncStorage.getItem('inventario');
   const inventario = JSON.parse(json);
 
@@ -526,9 +539,11 @@ export const syncDataWithServer = async () => {
               } catch (error) {
                 Alert.alert('Atenção', 'Erro ao sincronizar itens, tente novamente!')
               }
-          }          
+          }  
+                  
       });
   });
+
 };
 
 // Função para usar o SQLite e obter os itens da tabela INVENTARIOITEM
@@ -988,6 +1003,78 @@ export const getInventarios = () => {
       );
     });
   });
+};
+
+
+// Função para excluir inventário
+export const excluirInventario = async () => {
+
+ try {
+    // Recupera o cdInventario do AsyncStorage
+    const json = await AsyncStorage.getItem('inventario');
+    const inventario = JSON.parse(json);
+
+    if (inventario.codigoInventario) {
+      db.transaction(tx => {
+        tx.executeSql(
+          'DELETE FROM INVENTARIOS WHERE cdInventario = ?;', 
+          [inventario.codigoInventario], // Parâmetro para evitar injeções SQL
+          (_, result) => {
+            if (result.rowsAffected > 0) {
+              Alert.alert(`Inventário ${inventario.codigoInventario} excluído com sucesso!`);
+            } else {
+              Alert.alert(`Inventario ${inventario.codigoInventario} não encontrado!`);
+            }
+          },
+          (tx, error) => {
+            console.error('Erro ao excluir inventário:', error);
+          }
+        );
+        tx.executeSql(
+          'DELETE FROM INVENTARIOITEM WHERE cdInventario = ?;', 
+          [inventario.codigoInventario], // Parâmetro para evitar injeções SQL
+          (_, result) => {
+            if (result.rowsAffected > 0) {
+              //Alert.alert('Inventário excluído com sucesso!');
+            } else {
+              //Alert.alert('Nenhum inventário encontrado com esse cdInventario.');
+            }
+          },
+          (tx, error) => {
+            console.error('Erro ao excluir inventário:', error);
+          }
+        );
+      });
+    } else {
+      console.log('cdInventario não encontrado no AsyncStorage');
+    }
+  } catch (error) {
+    console.error('Erro ao recuperar cdInventario do AsyncStorage:', error);
+  }
+};
+
+export const deleteInventario = async () => {
+
+  // Recupera o cdInventario do AsyncStorage
+  const json = await AsyncStorage.getItem('inventario');
+  const inventario = JSON.parse(json);
+
+  Alert.alert(
+    "Confirmação?",
+    `Você tem certeza que deseja excluir o inventário ${inventario.codigoInventario}?`,
+    [
+      {
+        text: "Cancelar",
+        onPress: () => console.log("Cancelado"),
+        style: "cancel"
+      },
+      {
+        text: "Confirmar",
+        onPress: (excluirInventario),
+        style: "default"
+      }
+    ]
+  );
 };
 
 

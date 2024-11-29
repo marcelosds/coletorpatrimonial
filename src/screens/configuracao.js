@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, TextInput, Button, StyleSheet, Text, ScrollView, Alert, Switch } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Checkbox from 'expo-checkbox';
-import { createTable, handleLimpar, carregaData, syncDataWithServer } from '../database/baseSqlite';
+import { createTable, handleLimpar, carregaData, syncDataWithServer, deleteInventario } from '../database/baseSqlite';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 
@@ -220,7 +220,11 @@ const Configuracao = ( ) => {
           color="#4682b4"
         />
         <Text></Text>
-        <Button title="Ver Inventários" color="#4682b4" onPress={handleNavigateToInventarios} />
+        <Button 
+          title="Ver Inventários" 
+          color="#4682b4" 
+          onPress={handleNavigateToInventarios} 
+        />
         </View>
         <Text></Text>
         <View style={styles.box2}>
@@ -235,26 +239,35 @@ const Configuracao = ( ) => {
               disabled={!isEnabled} // Desativa o switch se a checkbox não estiver marcada
             />  
           </View>
-          <Button 
-            title="Importar Inventário" 
-            style={styles.button} 
-            onPress={carregaData} 
-            color="#4682b4" 
-            disabled={!isEnabledSwitch}  
-          />
-          <Text></Text>
-          <Button 
-            title="Exportar Inventário" 
-            style={styles.button} 
-            onPress={syncDataWithServer} 
-            color="#4682b4" 
-            disabled={!isEnabledSwitch}  
-          />
+          <View style={styles.sincronizar}>
+            <Button 
+              title="Importar Inventário" 
+              style={styles.button} 
+              onPress={carregaData} 
+              color="#4682b4" 
+              disabled={!isEnabledSwitch}  
+            />
+            <Button 
+              title="Exportar Inventário" 
+              style={styles.button} 
+              onPress={syncDataWithServer} 
+              color="#4682b4" 
+              disabled={!isEnabledSwitch}  
+            />
+          </View>
           <Text></Text>
         </View>
         <Text></Text>
         <View style={styles.box2}>
-        <Button 
+          <Button 
+            title="Excluir Inventário Selecionado" 
+            style={styles.button} 
+            onPress={deleteInventario} 
+            color="#4682b4"
+            disabled={!isEnabledSwitch}  
+          />
+          <Text></Text>
+          <Button 
             title="Limpar Dados do Coletor" 
             style={styles.button} 
             onPress={handleLimpar} 
@@ -287,6 +300,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#d3d3d3', // Cor de fundo
     borderRadius: 10
 
+  },
+  sincronizar: {
+    flexDirection: 'row', // Alinha os botões em linha
+    justifyContent: 'space-between', // Espaco entre os botões
   },
   title: {
     fontSize: 16,
@@ -356,7 +373,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 'auto',
-    paddingBottom: 10
   },
   dadosprincipal: {
     flexDirection: 'row',
