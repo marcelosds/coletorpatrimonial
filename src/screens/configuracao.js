@@ -80,31 +80,54 @@ const Configuracao = ( ) => {
   };
 
   
-  // Função para gravar todos os dados no AsyncStorage os dados informados
-  const Save = async () => {
+  // Grava os dados de configuração quando está ajustando pela 1ª vez e online
+  const SaveOne = async () => {
 
-    const json = await AsyncStorage.getItem('inventario');
-    const inventario = JSON.parse(json);
+    if (apiLink && senhaLink && codigoInventario && codigoUnidadeGestora) {
 
-    if (inventario.isEnabled) {
+      const token = await AsyncStorage.getItem('userToken');
 
-      const inventario = {
-        apiLink,
-        senhaLink,
-        codigoInventario: parseInt(codigoInventario),
-        codigoUnidadeGestora: parseInt(codigoUnidadeGestora),
-        isEnabled
+      const dispositivo = await axios.get(`${apiLink}/dispositivo`, {
+        headers: { Authorization: token },
+      });
+      const disp = dispositivo.data;
 
-      };
+     
+      if (senhaLink === disp) {
 
+        const inventario = {
+          apiLink,
+          senhaLink,
+          codigoInventario: parseInt(codigoInventario),
+          codigoUnidadeGestora: parseInt(codigoUnidadeGestora),
+          isEnabled
+
+        };
+        
       await AsyncStorage.setItem('inventario', JSON.stringify(inventario));
 
       Alert.alert('Sucesso', 'Configurações salvas.');
 
     } else {
+      Alert.alert('Atenção:', 'Senha da API incorreta!');
+    }
+    } else {
+      Alert.alert('Erro', 'Preencha todos os campos!');
+    }
+    
+  };
+
+ // Grava os dados de configuração quando está online
+  const SaveTwo = async () => {
+
+    const json = await AsyncStorage.getItem('inventario');
+    const inventario = JSON.parse(json);
+
+    if (inventario) {
 
     const token = await AsyncStorage.getItem('userToken');
-    
+
+   
     if (apiLink && senhaLink && codigoInventario && codigoUnidadeGestora) {
 
       const dispositivo = await axios.get(`${apiLink}/dispositivo`, {
@@ -137,23 +160,68 @@ const Configuracao = ( ) => {
   };
 
 
-  // Gravar as configurações informadas
-  const Gravar = async () => {
+  // Grava os dados de configuração quando está 100% offline
+  const SaveTree = async () => {
 
     const json = await AsyncStorage.getItem('inventario');
     const inventario = JSON.parse(json);
 
-    if (inventario.isEnabled) {
-      createTable(); //Cria tabela INVENTARIOITEM caso não exista
-      Save(); // Executa Save após 5 segundos
+    if (inventario) {
+
+    if (apiLink && senhaLink && codigoInventario && codigoUnidadeGestora) {
+
+      const inventario = {
+          apiLink,
+          senhaLink,
+          codigoInventario: parseInt(codigoInventario),
+          codigoUnidadeGestora: parseInt(codigoUnidadeGestora),
+          isEnabled
+
+        };
+        
+      await AsyncStorage.setItem('inventario', JSON.stringify(inventario));
+
+      Alert.alert('Sucesso', 'Configurações salvas.');
+
     } else {
-      createTable(); //Cria tabela INVENTARIOITEM caso não exista
-      obterToken(); // Aguarda a conclusão da obtenção do token 
-      setTimeout(() => {
-        Save(); // Executa Save após 5 segundos
-    }, 3000); // Tempo em milissegundos (5000 ms = 5 segundos)
+      Alert.alert('Erro', 'Preencha todos os campos!');
+    }
   }
-   };
+    
+  };
+
+
+  // Gravar as configurações informadas
+  const Gravar = async () => {
+    // Recupera o item 'inventario' do AsyncStorage
+    const json = await AsyncStorage.getItem('inventario');
+    const inventario = JSON.parse(json);
+
+    // Cria tabela INVENTARIOITEM caso não exista
+    createTable();
+
+    // Se o inventário for nulo, obtemos o token e chamamos SaveOne após 3 segundos
+    if (inventario === null) {
+        await obterToken(); // Aguarda a conclusão da obtenção do token 
+
+        setTimeout(() => {
+            SaveOne(); // Executa SaveOne após 3 segundos
+        }, 3000); // Tempo em milissegundos (3000 ms = 3 segundos);
+    } else {
+        // Se isEnabled for verdadeiro, chama SaveTree
+        if (inventario.isEnabled) {
+            SaveTree();
+        } else {
+            // Se isEnabled for falso, obtemos o token novamente e chamamos SaveTwo após 3 segundos
+            await obterToken(); // Aguarda a conclusão da obtenção do token 
+
+            setTimeout(() => {
+                SaveTwo(); // Executa SaveTwo após 3 segundos
+            }, 3000);
+        }
+    }
+};
+
 
 
 
