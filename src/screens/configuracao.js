@@ -441,6 +441,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 'auto',
+    paddingBottom: 10
   },
   dadosprincipal: {
     flexDirection: 'row',

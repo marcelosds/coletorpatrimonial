@@ -10,8 +10,9 @@ const Login = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [logoUri, setLogoUri] = useState(null);
 
-
+ 
   useEffect(() => {
+
     const loadLogo = async () => {
       const storedLogoUri = await AsyncStorage.getItem('logoUri');
       if (storedLogoUri) {
@@ -75,7 +76,9 @@ const Login = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+
       <View style={styles.header}>
+      
       {!logoUri ? (
         <Button title="Clique aqui para carregar imagem logomarca" onPress={pickImage} color="#4682b4" />
       ) : (
